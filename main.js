@@ -66,17 +66,28 @@ function drawRevShellList(lhost, lport) {
       </li>
       `);
 
-      const $copy_input = $(`#revsh_${i}_${j}`).find('.copy_input');
-      //「Copy」ボタン押下
+      // Reverse Shell
+      const $revsh = $(`#revsh_${i}_${j}`);
+      $revsh.click(function () {
+        $revsh.find('.copy_input').trigger('click'); // 枠内をクリックするとコピー押下する
+        return false;
+      })
+
+      // Copy Button
+      const $copy_input = $revsh.find('.copy_input');
       $copy_input.click(function () {
         // 対象の文字列をinputに格納してからコピーする
-        const text = $(`#revsh_${i}_${j}`).find('.copy_target').text();
+        const text = $revsh.find('.copy_target').text();
         $('#input').val(text);
         var copyText = document.querySelector("#input");
         copyText.select();
         document.execCommand("copy");
         // コピー完了したらツールチップ表示
         $(this).tooltip('show');
+        // コピー完了したら強調表示
+        $('.my-active').removeClass('my-active');
+        $revsh.addClass('my-active');
+        return false;
       });
       //「Copy」ボタンのツールチップ（補足説明）の設定
       $copy_input
