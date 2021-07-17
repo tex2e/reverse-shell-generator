@@ -47,8 +47,8 @@ function drawRevShellList(lhost, lport) {
     for (let j = 0; j < reverseShells[language].length; j++) {
       let reverseShell = reverseShells[language][j]; // Base64 revshell string
       reverseShell = atob(reverseShell);
-      reverseShell = reverseShell.replace('{0}', `<span class="bg-warning">${lhost}</span>`);
-      reverseShell = reverseShell.replace('{1}', `<span class="bg-warning">${lport}</span>`);
+      reverseShell = reverseShell.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+      reverseShell = reverseShell.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       //console.log(reverseShell);
 
       // Template
@@ -145,3 +145,18 @@ reverseShells = {
 
 }
 
+
+function htmlEscape(str) {
+  if (!str) return;
+  return str.replace(/[<>&"'`]/g, function (match) {
+    const escape = {
+      '<': '&lt;',
+      '>': '&gt;',
+      '&': '&amp;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '`': '&#x60;'
+    };
+    return escape[match];
+  });
+}
