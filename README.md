@@ -1,7 +1,7 @@
 
-# Reverse Shells Generator :shell:
+# Reverse Shells Generator
 
-:shell: https://tex2e.github.io/reverse-shell-generator/index.html
+:shell: https://tex2e.github.io/reverse-shell-generator/index.html :shell:
 
 
 ### See Also
