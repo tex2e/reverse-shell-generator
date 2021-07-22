@@ -43,45 +43,43 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="mytool2-tab" data-bs-toggle="tab" data-bs-target="#mytool2"
-        type="button" role="tab" aria-controls="mytool2" aria-selected="false">mytool2</button>
+        type="button" role="tab" aria-controls="mytool2" aria-selected="false">⬆ Upload</button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="mytool3-tab" data-bs-toggle="tab" data-bs-target="#mytool3"
-        type="button" role="tab" aria-controls="mytool3" aria-selected="false">mytool3</button>
+        type="button" role="tab" aria-controls="mytool3" aria-selected="false">⬇ Download</button>
     </li>
   </ul>
   <div class="tab-content" id="myTabContent">
     <!-- Begin: Reverse Shells Generator -->
     <div class="tab-pane fade show active" id="mytool1" role="tabpanel" aria-labelledby="mytool1-tab">
       <div class="container">
-        <div style="height: 5px;"></div>
+        <h2 class="mt-3">🐚 Reverse Shells Generator</h2>
 
-        <h2>🐚 Reverse Shells Generator</h2>
-
-        <div style="height: 5px;"></div>
-
-        <div class="row g-3 align-items-center">
+        <div class="mt-2 row g-3 align-items-center">
           <div class="col-auto">
             <label for="revshInputLHOST" class="col-form-label">LHOST</label>
           </div>
           <div class="col-auto">
-            <input type="text" id="revshInputLHOST" class="form-control" value="10.0.0.1"
-              name="LHOST" onClick="this.select();">
+            <input type="text" id="revshInputLHOST" class="form-control" value="10.0.0.1" placeholder="10.0.0.1"
+              name="LHOST">
           </div>
           <div class="col-auto">
             <label for="revshInputLPORT" class="col-form-label">LPORT</label>
           </div>
           <div class="col-auto">
-            <input type="number" id="revshInputLPORT" class="form-control" value="4444"
-              name="LPORT" onClick="this.select();">
+            <input type="number" id="revshInputLPORT" class="form-control" value="4444" placeholder="4444"
+              name="LPORT">
           </div>
           <div class="col-auto">
-            <button type="submit" id="inputSubmit" class="btn btn-primary">Submit</button>
+            <button type="submit" id="revshInputSubmit" class="btn btn-primary">Submit</button>
           </div>
         </div>
 
-        <div style="height: 10px;"></div>
+        <h5 class="mt-3">1. Listen</h5>
+        <ol id="revshListener" class="list-group"></ol>
 
+        <h5 class="mt-3">2. Connect back</h5>
         <ol id="revshList" class="list-group"></ol>
 
         <input id="input" class="visually-hidden" type="text" />

