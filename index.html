@@ -31,40 +31,77 @@
 
   <script src="main.js"></script>
 </head>
-<body onload="main()">
+<body>
 
-  <div class="container">
-    <h1>🐚 Reverse Shells Generator</h1>
+  <div style="height: 5px;"></div>
 
-    <div style="height: 5px;"></div>
+  <!-- Menu -->
+  <ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="mytool1-tab" data-bs-toggle="tab" data-bs-target="#mytool1"
+        type="button" role="tab" aria-controls="mytool1" aria-selected="true">🐚 RevShell</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytool2-tab" data-bs-toggle="tab" data-bs-target="#mytool2"
+        type="button" role="tab" aria-controls="mytool2" aria-selected="false">mytool2</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytool3-tab" data-bs-toggle="tab" data-bs-target="#mytool3"
+        type="button" role="tab" aria-controls="mytool3" aria-selected="false">mytool3</button>
+    </li>
+  </ul>
+  <div class="tab-content" id="myTabContent">
+    <!-- Begin: Reverse Shells Generator -->
+    <div class="tab-pane fade show active" id="mytool1" role="tabpanel" aria-labelledby="mytool1-tab">
+      <div class="container">
+        <div style="height: 5px;"></div>
 
-    <div class="row g-3 align-items-center">
-      <div class="col-auto">
-        <label for="inputLHOST" class="col-form-label">LHOST</label>
-      </div>
-      <div class="col-auto">
-        <input type="text" id="inputLHOST" class="form-control" value="10.0.0.1"
-          name="LHOST" onClick="this.select();">
-      </div>
-      <div class="col-auto">
-        <label for="inputLPORT" class="col-form-label">LPORT</label>
-      </div>
-      <div class="col-auto">
-        <input type="number" id="inputLPORT" class="form-control" value="4444"
-          name="LPORT" onClick="this.select();">
-      </div>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-primary" onclick="submit()">Submit</button>
+        <h2>🐚 Reverse Shells Generator</h2>
+
+        <div style="height: 5px;"></div>
+
+        <div class="row g-3 align-items-center">
+          <div class="col-auto">
+            <label for="revshInputLHOST" class="col-form-label">LHOST</label>
+          </div>
+          <div class="col-auto">
+            <input type="text" id="revshInputLHOST" class="form-control" value="10.0.0.1"
+              name="LHOST" onClick="this.select();">
+          </div>
+          <div class="col-auto">
+            <label for="revshInputLPORT" class="col-form-label">LPORT</label>
+          </div>
+          <div class="col-auto">
+            <input type="number" id="revshInputLPORT" class="form-control" value="4444"
+              name="LPORT" onClick="this.select();">
+          </div>
+          <div class="col-auto">
+            <button type="submit" id="inputSubmit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+
+        <div style="height: 10px;"></div>
+
+        <ol id="revshList" class="list-group"></ol>
+
+        <input id="input" class="visually-hidden" type="text" />
+        <button id="copy" class="visually-hidden">Copy</button>
       </div>
     </div>
-
-    <div style="height: 5px;"></div>
-
-    <ol id="revshList" class="list-group"></ol>
-
-    <input id="input" class="visually-hidden" type="text" />
-    <button id="copy" class="visually-hidden">Copy</button>
+    <!-- End: Reverse Shells Generator -->
+    <div class="tab-pane fade" id="mytool2" role="tabpanel" aria-labelledby="mytool2-tab">
+      <div class="container">
+        <span>Under Construction</span>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="mytool3" role="tabpanel" aria-labelledby="mytool3-tab">
+      <div class="container">
+        <span>Under Construction</span>
+      </div>
+    </div>
   </div>
+
+
 
   <br>
 
