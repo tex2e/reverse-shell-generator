@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pentest Tools</title>
+  <title>My Pentest Tools</title>
   <link rel="icon" href="favicon.ico">
 
   <link rel="stylesheet" href="lib/bootstrap-5.0.2.min.css">
@@ -51,7 +51,11 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="mytoolUpDown-tab" data-bs-toggle="tab" data-bs-target="#mytoolUpDown"
-        type="button" role="tab" aria-controls="mytoolUpDown" aria-selected="false">⬆ UpDown</button>
+        type="button" role="tab" aria-controls="mytoolUpDown" aria-selected="false">⬆ Upload</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytoolPassCrack-tab" data-bs-toggle="tab" data-bs-target="#mytoolPassCrack"
+        type="button" role="tab" aria-controls="mytoolPassCrack" aria-selected="false">🔐 Password</button>
     </li>
     <!--
     <li class="nav-item" role="presentation">
@@ -64,7 +68,7 @@
     <!-- Begin: Recon -->
     <div class="tab-pane fade" id="mytoolRecon" role="tabpanel" aria-labelledby="mytoolRecon-tab">
       <div class="container">
-        <h2 class="mt-3">👁 Recon</h2>
+        <h2 class="mt-3">👁 Reconnaissance</h2>
 
         <!-- Input -->
         <div class="mt-2 row g-3 align-items-center">
@@ -87,14 +91,17 @@
     <!-- Begin: Web -->
     <div class="tab-pane fade" id="mytoolWeb" role="tabpanel" aria-labelledby="mytoolWeb-tab">
       <div class="container">
-        <h2 class="mt-3">🕷 Web</h2>
+        <h2 class="mt-3">🕷 Web Application Penetration Test</h2>
 
         <!-- Input -->
         <div class="mt-2 row g-3 align-items-center">
           <div class="col-auto"><label for="webInputURL" class="col-form-label">URL</label></div>
-          <div class="col-auto"><input type="text" id="webInputURL" class="form-control" name="URL"></div>
+          <div class="col-6"><input type="text" id="webInputURL" class="form-control" name="URL"></div>
           <div class="col-auto"><button type="submit" id="webInputSubmit" class="btn btn-primary">Submit</button></div>
         </div>
+
+        <h5 class="mt-3">1. WAPT</h5>
+        <ol id="webList" class="list-group"></ol>
       </div>
     </div>
     <!-- End: Web -->
@@ -147,9 +154,15 @@
       </div>
     </div>
     <!-- End: Upload and Download -->
-
+    <!-- Begin: Password Cracking -->
+    <div class="tab-pane fade" id="mytoolPassCrack" role="tabpanel" aria-labelledby="mytoolPassCrack-tab">
+      <div class="container">
+        <span>Under Construction</span>
+      </div>
+    </div>
+    <!-- End: Password Cracking -->
     <!--
-    <div class="tab-pane fade" id="mytool3" role="tabpanel" aria-labelledby="mytool3-tab">
+    <div class="tab-pane fade" id="mytool0" role="tabpanel" aria-labelledby="mytool0-tab">
       <div class="container">
         <span>Under Construction</span>
       </div>

