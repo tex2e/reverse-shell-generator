@@ -38,6 +38,14 @@
   <!-- Menu -->
   <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytoolRecon-tab" data-bs-toggle="tab" data-bs-target="#mytoolRecon"
+        type="button" role="tab" aria-controls="mytoolRecon" aria-selected="false">👁 Recon</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytoolWeb-tab" data-bs-toggle="tab" data-bs-target="#mytoolWeb"
+        type="button" role="tab" aria-controls="mytoolWeb" aria-selected="false">🕷 Web</button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link active" id="mytoolRevShell-tab" data-bs-toggle="tab" data-bs-target="#mytoolRevShell"
         type="button" role="tab" aria-controls="mytoolRevShell" aria-selected="true">🐚 RevShell</button>
     </li>
@@ -45,12 +53,51 @@
       <button class="nav-link" id="mytoolUpDown-tab" data-bs-toggle="tab" data-bs-target="#mytoolUpDown"
         type="button" role="tab" aria-controls="mytoolUpDown" aria-selected="false">⬆ UpDown</button>
     </li>
+    <!--
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="mytool3-tab" data-bs-toggle="tab" data-bs-target="#mytool3"
-        type="button" role="tab" aria-controls="mytool3" aria-selected="false">AAA</button>
+      <button class="nav-link" id="mytool0-tab" data-bs-toggle="tab" data-bs-target="#mytool0"
+        type="button" role="tab" aria-controls="mytool0" aria-selected="false">AAA</button>
     </li>
+    -->
   </ul>
   <div class="tab-content" id="myTabContent">
+    <!-- Begin: Recon -->
+    <div class="tab-pane fade" id="mytoolRecon" role="tabpanel" aria-labelledby="mytoolRecon-tab">
+      <div class="container">
+        <h2 class="mt-3">👁 Recon</h2>
+
+        <!-- Input -->
+        <div class="mt-2 row g-3 align-items-center">
+          <div class="col-auto"><label for="reconInputRHOST" class="col-form-label">RHOST</label></div>
+          <div class="col-auto"><input type="text" id="reconInputRHOST" class="form-control" name="RHOST"></div>
+          <div class="col-auto"><label for="reconInputRPORT" class="col-form-label">RPORT</label></div>
+          <div class="col-auto"><input type="number" id="reconInputRPORT" class="form-control" name="RPORT"></div>
+          <div class="col-auto"><button type="submit" id="reconInputSubmit" class="btn btn-primary">Submit</button></div>
+        </div>
+
+        <h5 class="mt-3">1. Nmap</h5>
+        <ol id="reconNmapList" class="list-group"></ol>
+
+        <h5 class="mt-3">2. LDAP</h5>
+        <ol id="reconLDAPList" class="list-group"></ol>
+        
+      </div>
+    </div>
+    <!-- End: Recon -->
+    <!-- Begin: Web -->
+    <div class="tab-pane fade" id="mytoolWeb" role="tabpanel" aria-labelledby="mytoolWeb-tab">
+      <div class="container">
+        <h2 class="mt-3">🕷 Web</h2>
+
+        <!-- Input -->
+        <div class="mt-2 row g-3 align-items-center">
+          <div class="col-auto"><label for="webInputURL" class="col-form-label">URL</label></div>
+          <div class="col-auto"><input type="text" id="webInputURL" class="form-control" name="URL"></div>
+          <div class="col-auto"><button type="submit" id="webInputSubmit" class="btn btn-primary">Submit</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- End: Web -->
     <!-- Begin: Reverse Shells Generator -->
     <div class="tab-pane fade show active" id="mytoolRevShell" role="tabpanel" aria-labelledby="mytoolRevShell-tab">
       <div class="container">
@@ -98,11 +145,13 @@
     </div>
     <!-- End: Upload and Download -->
 
+    <!--
     <div class="tab-pane fade" id="mytool3" role="tabpanel" aria-labelledby="mytool3-tab">
       <div class="container">
         <span>Under Construction</span>
       </div>
     </div>
+    -->
   </div>
 
   <!-- Copy -->

