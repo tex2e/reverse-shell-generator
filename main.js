@@ -285,8 +285,8 @@ class RevShell extends MyTool {
       } else {
         // コマンドそのまま
         cmd = content.cmd;
-        cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
-        cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+        cmd = cmd.replaceAll('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+        cmd = cmd.replaceAll('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       }
 
       // Template
