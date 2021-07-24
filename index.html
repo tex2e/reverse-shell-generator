@@ -97,6 +97,8 @@
         <div class="mt-2 row g-3 align-items-center">
           <div class="col-auto"><label for="webInputURL" class="col-form-label">URL</label></div>
           <div class="col-6"><input type="text" id="webInputURL" class="form-control" name="URL"></div>
+          <div class="col-auto"><label for="webInputFILENAME" class="col-form-label">FILENAME</label></div>
+          <div class="col-auto"><input type="text" id="webInputFILENAME" class="form-control" name="FILENAME"></div>
           <div class="col-auto"><button type="submit" id="webInputSubmit" class="btn btn-primary">Submit</button></div>
         </div>
 
@@ -157,7 +159,17 @@
     <!-- Begin: Password Cracking -->
     <div class="tab-pane fade" id="mytoolPassCrack" role="tabpanel" aria-labelledby="mytoolPassCrack-tab">
       <div class="container">
-        <span>Under Construction</span>
+        <h2 class="mt-3">🔐 Password Cracking</h2>
+
+        <!-- Input -->
+        <div class="mt-2 row g-3 align-items-center">
+          <div class="col-auto"><label for="passcrackInputFILENAME" class="col-form-label">FILENAME</label></div>
+          <div class="col-auto"><input type="text" id="passcrackInputFILENAME" class="form-control" name="FILENAME"></div>
+          <div class="col-auto"><button type="submit" id="passcrackInputSubmit" class="btn btn-primary">Submit</button></div>
+        </div>
+
+        <h5 class="mt-3">1. Hashcat</h5>
+        <ol id="passcrackList" class="list-group"></ol>
       </div>
     </div>
     <!-- End: Password Cracking -->

