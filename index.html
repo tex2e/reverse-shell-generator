@@ -38,6 +38,10 @@
   <!-- Menu -->
   <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytoolOsint-tab" data-bs-toggle="tab" data-bs-target="#mytoolOsint"
+        type="button" role="tab" aria-controls="mytoolOsint" aria-selected="false">🔍 OSINT</button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link" id="mytoolRecon-tab" data-bs-toggle="tab" data-bs-target="#mytoolRecon"
         type="button" role="tab" aria-controls="mytoolRecon" aria-selected="false">👁 Recon</button>
     </li>
@@ -65,6 +69,23 @@
     -->
   </ul>
   <div class="tab-content" id="myTabContent">
+    <!-- Begin: OSINT -->
+    <div class="tab-pane fade" id="mytoolOsint" role="tabpanel" aria-labelledby="mytoolOsint-tab">
+      <div class="container">
+        <h2 class="mt-3">🔍 OSINT</h2>
+
+        <!-- Input -->
+        <div class="mt-2 row g-3 align-items-center">
+          <div class="col-auto"><label for="osintInputRHOST" class="col-form-label">RHOST</label></div>
+          <div class="col-auto"><input type="text" id="osintInputRHOST" class="form-control" name="RHOST"></div>
+          <div class="col-auto"><button type="submit" id="osintInputSubmit" class="btn btn-primary">Submit</button></div>
+        </div>
+
+        <h5 class="mt-3">1. DNS</h5>
+        <ol id="osintDnsList" class="list-group"></ol>
+      </div>
+    </div>
+    <!-- End: OSINT -->
     <!-- Begin: Recon -->
     <div class="tab-pane fade" id="mytoolRecon" role="tabpanel" aria-labelledby="mytoolRecon-tab">
       <div class="container">
@@ -84,7 +105,6 @@
 
         <h5 class="mt-3">2. LDAP</h5>
         <ol id="reconLDAPList" class="list-group"></ol>
-        
       </div>
     </div>
     <!-- End: Recon -->
@@ -104,6 +124,9 @@
 
         <h5 class="mt-3">1. WAPT</h5>
         <ol id="webList" class="list-group"></ol>
+
+        <h5 class="mt-3">2. WebShell</h5>
+        <ol id="webShellList" class="list-group"></ol>
       </div>
     </div>
     <!-- End: Web -->
@@ -173,6 +196,7 @@
       </div>
     </div>
     <!-- End: Password Cracking -->
+
     <!--
     <div class="tab-pane fade" id="mytool0" role="tabpanel" aria-labelledby="mytool0-tab">
       <div class="container">

