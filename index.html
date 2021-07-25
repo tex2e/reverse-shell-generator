@@ -50,6 +50,10 @@
         type="button" role="tab" aria-controls="mytoolWeb" aria-selected="false">🕷 Web</button>
     </li>
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mytoolSqlInj-tab" data-bs-toggle="tab" data-bs-target="#mytoolSqlInj"
+        type="button" role="tab" aria-controls="mytoolSqlInj" aria-selected="false">💉 SQL</button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link active" id="mytoolRevShell-tab" data-bs-toggle="tab" data-bs-target="#mytoolRevShell"
         type="button" role="tab" aria-controls="mytoolRevShell" aria-selected="true">🐚 RevShell</button>
     </li>
@@ -132,8 +136,18 @@
         <h5 class="mt-3">1. WAPT</h5>
         <ol id="webList" class="list-group"></ol>
 
-        <h5 class="mt-3">2. WebShell</h5>
+        <h5 class="mt-3">2. WebShell (KaliLinux)</h5>
         <ol id="webShellList" class="list-group"></ol>
+      </div>
+    </div>
+    <!-- End: Web -->
+    <!-- Begin: Sql -->
+    <div class="tab-pane fade" id="mytoolSqlInj" role="tabpanel" aria-labelledby="mytoolSqlInj-tab">
+      <div class="container">
+        <h2 class="mt-3">💉 SQL Injection</h2>
+
+        <h5 class="mt-3">1. General</h5>
+        <ol id="sqlinjList" class="list-group"></ol>
       </div>
     </div>
     <!-- End: Web -->

