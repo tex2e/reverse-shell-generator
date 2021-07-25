@@ -1,11 +1,3 @@
-/* Usage:
-
-gcc -pthread DirtyCow.c -o DirtyCow
-./DirtyCow
-/usr/bin/passwd
-
-*/
-
 /*
 * A PTRACE_POKEDATA variant of CVE-2016-5195
 * should work on RHEL 5 & 6
