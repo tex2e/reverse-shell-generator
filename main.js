@@ -77,7 +77,7 @@ $(function () {
   STORAGE_KEY = 'OSINT_ENV';
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
   const osintRhost = (storageInfo && storageInfo.RHOST) || 'example.com';
-  const osint = new Osint('#mytoolOsint', ['#osintDnsList'], {
+  const osint = new Osint('#mytoolOsint', ['#osintDnsList', '#osintGoogleDorksList'], {
     'RHOST': '#osintInputRHOST',
     'SUBMIT': '#osintInputSubmit',
   })
@@ -496,7 +496,7 @@ class PassCrack extends MyTool {
       {'title': 'Hybrid Mode (Prepend)', 'cmd': `hashcat -a 6 -m HASHMODE {0} -1=012 '20?1?d' /usr/share/wordlists/rockyou.txt`, 'memo': '2015Password'},
       {'title': 'Hybrid Mode (Append)', 'cmd': `hashcat -a 7 -m HASHMODE {0} -1=012 '20?1?d' /usr/share/wordlists/rockyou.txt`, 'memo': 'Password2015'},
       {'title': 'Hashcat Rule', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/rockyou-30000.rule'},
-      { 'title': '1. Create Custom Hashcat Rule', 'cmd': `echo 'so0 si1 se3 ss5 sa@ c $2 $0 $1 $9' > rule.txt`, 'memo': '<ul><li>l = Convert all letters to lowercase</li><li>u = Convert all letters to uppercase</li><li>c = Capitalize first letter and invert the rest</li><li>^X = Prepend character X</li><li>$X = Append character X</li><li>sXY = Substitute letter from X to Y</li><li>r = Reverse</li></ul>'},
+      {'title': '1. Create Custom Hashcat Rule', 'cmd': `echo 'so0 si1 se3 ss5 sa@ c $2 $0 $1 $9' > rule.txt`, 'memo': '<ul><li>l = Convert all letters to lowercase</li><li>u = Convert all letters to uppercase</li><li>c = Capitalize first letter and invert the rest</li><li>^X = Prepend character X</li><li>$X = Append character X</li><li>sXY = Substitute letter from X to Y</li><li>r = Reverse</li></ul>'},
       {'title': '2. Apply Custom Hashcat Rule', 'cmd': 'hashcat -a 0 -m HASHMODE {0} /usr/share/wordlists/rockyou.txt -r rule.txt'},
     ];
   }
@@ -543,9 +543,33 @@ class Osint extends MyTool {
       {'title': 'dig - TXT (Text records)', 'cmd': 'dig TXT {0}'},
       {'title': 'Zone Transfer', 'cmd': 'dig axfr {0} @IPADDR'},
     ];
+
+    this.targetContents['2.GoogleDorks'] = [
+      {'title': 'Log files', 'cmd': '{0} allintext:username filetype:log'},
+      {'title': 'Vulnerable web servers', 'cmd': '{0} inurl:/proc/self/cwd'},
+      {'title': 'Open FTP servers', 'cmd': '{0} intitle:"index of" inurl:ftp'},
+      {'title': 'ENV files', 'cmd': '{0} filetype:env "DB_PASSWORD"'},
+      {'title': 'SSH private keys', 'cmd': '{0} intitle:index.of id_rsa -id_rsa.pub'},
+      {'title': 'SSH private keys', 'cmd': '{0} filetype:log username putty'},
+      {'title': 'Email lists', 'cmd': '{0} filetype:xls inurl:"email.xls"'},
+      {'title': 'Live cameras', 'cmd': '{0} intitle:"webcamXP 5"'},
+      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intitle: index of mp3'},
+      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intitle: index of pdf'},
+      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intext: .mp4'},
+      {'title': 'Weather', 'cmd': '{0} intitle:"Weather Wing WS-2"'},
+      {'title': 'Zoom videos', 'cmd': '{0} inurl:zoom.us/j and intext:scheduled for'},
+      {'title': 'SQL dumps', 'cmd': '{0} "index of" "database.sql.zip"'},
+      {'title': 'WordPress Admin', 'cmd': '{0} intitle:"Index of" wp-admin'},
+      {'title': 'Apache2', 'cmd': '{0} intitle:"Apache2 Ubuntu Default Page: It works"'},
+      {'title': 'phpMyAdmin', 'cmd': '{0} "Index of" inurl:phpmyadmin'},
+      {'title': 'JIRA/Kibana', 'cmd': '{0} inurl:Dashboard.jspa intext:"Atlassian Jira Project Management Software"'},
+      {'title': 'JIRA/Kibana', 'cmd': '{0} inurl:app/kibana intext:Loading Kibana'},
+      {'title': 'cPanel password reset', 'cmd': '{0} inurl:_cpanel/forgotpwd'},
+      {'title': 'Government documents', 'cmd': '{0} allintitle: restricted filetype:doc site:gov'},
+    ];
   }
 
-  drawList(index, targetContent, rhost) {
+  drawList(index, targetContent, rhost, query) {
     for (let i = 0; i < targetContent.length; i++) {
       const content = targetContent[i];
       let title = content.title;
