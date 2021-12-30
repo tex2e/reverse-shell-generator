@@ -359,7 +359,7 @@ class Web extends MyTool {
     super(...args);
 
     this.targetContents['1.WAPT'] = [
-      {'title': 'Check Header', 'cmd': 'curl -v "{0}'},
+      {'title': 'Check Header', 'cmd': 'curl -v "{0}"'},
       {'title': 'gobuster', 'cmd': 'gobuster dir -w /usr/share/wordlists/dirb/common.txt -u "{0}"'},
       {'title': 'nikto', 'cmd': 'nikto --url "{0}"'},
       {'title': 'WebDAV', 'cmd': 'curl -v -X OPTIONS "{0}"'},
@@ -367,7 +367,7 @@ class Web extends MyTool {
       {'title': 'WebDAV', 'cmd': `curl -v -X PUT '{0}/{1}.php' -d @{1}.php`},
       {'title': '1. PUT txt file', 'cmd': `curl -v -X PUT '{0}/{1}.txt' --data-binary @{1}.php`},
       {'title': '2. MOVE from txt to php', 'cmd': `curl -v -X MOVE '{0}/{1}.txt' --header 'Destination: {0}/{1}.php'`},
-      {'title': 'Wordpress', 'cmd': 'wpscan --disable-tls-checks --url "{0}'},
+      {'title': 'Wordpress', 'cmd': 'wpscan --disable-tls-checks --url "{0}"'},
       {'title': '1. CMSmap', 'cmd': 'git clone https://github.com/Dionach/CMSmap && cd CMSmap && pip3 install .'},
       {'title': '2. CMSmap', 'cmd': 'cmsmap "{0}"'},
     ];
